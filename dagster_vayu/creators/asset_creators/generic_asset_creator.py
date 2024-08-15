@@ -10,15 +10,15 @@ from dagster import (
 )
 
 from ...config_manager.models.workflow_model import PartitionParams, TaskTypeUnion
+from ...tasks.manager.task_registry import task_registry
 from ...utils import ConfigParamReplacer
-from ..manager.task_registry import task_registry
-from ..utils import generate_partition_params
 from .base_asset_creator import BaseAssetCreator
+from .utils import generate_partition_params
 
 
 class GenericAssetCreator(BaseAssetCreator):
     """
-    A concrete implementation of BaseAssetManager for managing general assets.
+    A concrete implementation of BaseAssetCreator for managing general assets.
 
     This class is responsible for building and retrieving asset definitions
     based on the workflow configuration.
@@ -27,11 +27,13 @@ class GenericAssetCreator(BaseAssetCreator):
         _assets (List[AssetsDefinition]): A list to store asset definitions.
 
     Methods:
-        _execute_task_function(): Executes a task function based on its type.
-        _execute_asset_fn(): Executes an asset function with the given context and spec.
-        _get_asset_key_split(): Splits an asset key into name and prefix.
-        _build_asset(): Builds an asset definition based on the given task spec.
-        get_assets(): Retrieves or builds all asset definitions for the workflow.
+        __init__: Initializes the GenericAssetCreator.
+        _execute_task_function: Executes a task function based on its type.
+        _materialize_asset: Materializes an asset with the given context, spec,
+                            and required resources.
+        _get_asset_key_split: Splits an asset key into name and prefix.
+        _build_asset: Builds an asset definition based on the given task specification.
+        get_assets: Retrieves or builds all asset definitions for the workflow.
     """
 
     def __init__(self) -> None:
@@ -98,7 +100,11 @@ class GenericAssetCreator(BaseAssetCreator):
         name, key_prefix = self._get_asset_key_split(spec.asset_key)
 
         partition_params = (
-            generate_partition_params(partitions[spec.asset_key])
+            generate_partition_params(
+                partitions[spec.asset_key].model_dump(
+                    exclude_defaults=True, exclude_unset=True
+                )
+            )
             if spec.asset_key in partitions
             else None
         )
@@ -131,10 +137,13 @@ class GenericAssetCreator(BaseAssetCreator):
 
     def get_assets(self) -> List[AssetsDefinition]:
         """
-        Builds asset definitions for all the assets in the workflow config files.
+        Retrieves or builds asset definitions for all the assets in the workflow config.
+
+        If the assets haven't been built yet, this method will build them based on
+        the workflow configuration.
 
         Returns:
-            List[AssetsDefinition]
+            List[AssetsDefinition]: A list of asset definitions.
         """
         if not self._assets:
             partitions = self._wb.asset_key_partition_map

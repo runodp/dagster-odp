@@ -15,15 +15,21 @@ from dagster import (
 from dagster_dbt import DagsterDbtTranslator, DbtCliEventMessage, dbt_assets
 
 from ...config_manager.models.workflow_model import DBTParams, DBTTask
-from ...resources import get_dagster_resources
-from ..utils import generate_partition_params
+from ...resources import VayuDbtResource
 from .base_asset_creator import BaseAssetCreator
+from .utils import generate_partition_params
 
 
 class CustomDagsterDbtTranslator(DagsterDbtTranslator):
     """
-    Overrides the `get_metadata` method to include the custom DBT run arguments
-    in the metadata.
+    Extends the DagsterDbtTranslator to include custom metadata in the asset metadata.
+
+    This class overrides the `get_metadata` method to merge custom metadata
+    with the base metadata provided by the parent class.
+
+    Attributes:
+        custom_metadata (Dict[str, Any]): Additional metadata to be included
+                                          in the asset metadata.
     """
 
     def __init__(self, custom_metadata: Dict[str, Any]):
@@ -38,7 +44,7 @@ class CustomDagsterDbtTranslator(DagsterDbtTranslator):
 
 class DBTAssetCreator(BaseAssetCreator):
     """
-    A concrete implementation of BaseAssetManager for managing DBT assets.
+    A concrete implementation of BaseAssetCreator for managing DBT assets.
 
     This class is responsible for building and retrieving asset definitions
     specifically for DBT assets.
@@ -46,27 +52,30 @@ class DBTAssetCreator(BaseAssetCreator):
     Attributes:
         _resources (Any): The resources configuration.
         _dbt_resource (Any): The DBT resource configuration.
-        _dbt_cli_resource (Any): The DBT CLI resource configuration.
+        _dbt_cli_resource (VayuDbtResource): The DBT CLI resource.
         _dbt_manifest_path (Path): The path to the DBT manifest file.
 
     Methods:
-        _load_dbt_manifest_path(): Loads or generates the DBT manifest path.
-        _manifest_sources(): Property that returns the sources from the DBT manifest.
-        build_dbt_external_sources(): Builds external asset definitions for DBT sources.
-        _read_or_create_sources_yml(): Reads or creates a sources YAML file.
-        update_dbt_sources(): Updates the sources YAML file based on
-                              DBT assets and the manifest file.
-        _get_dbt_output_metadata(): Extracts metadata from a DBT CLI event.
-        _build_asset(): Builds a DBT asset definition.
-        get_assets(): Retrieves or builds all DBT asset definitions for the workflow.
+        __init__: Initializes the DBTAssetCreator.
+        _parse_project: Parses the DBT project and returns the manifest path.
+        _load_dbt_manifest_path: Loads or generates the DBT manifest path.
+        _manifest_sources: Property that returns the sources from the DBT manifest.
+        build_dbt_external_sources: Builds external asset definitions for DBT sources.
+        _read_or_create_sources_yml: Reads or creates a sources YAML file.
+        _update_sources_yml_data: Updates the sources YAML data.
+        update_dbt_sources: Updates the sources YAML file based on DBT assets
+                            and the manifest.
+        _get_dbt_output_metadata: Extracts metadata from a DBT CLI event.
+        _materialize_dbt_asset: Materializes a DBT asset.
+        _build_asset: Builds a DBT asset definition.
+        get_assets: Retrieves or builds all DBT asset definitions for the workflow.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, dbt_cli_resource: VayuDbtResource) -> None:
         super().__init__()
         self._resources = self._dagster_config.resources
         dbt_resource = self._resources.dbt
-        dbt_cli_resource = get_dagster_resources().get("dbt")
-        if dbt_resource and dbt_cli_resource:
+        if dbt_resource:
             self._dbt_resource = dbt_resource
             self._dbt_cli_resource = dbt_cli_resource
         else:
@@ -82,6 +91,13 @@ class DBTAssetCreator(BaseAssetCreator):
         )
 
     def _load_dbt_manifest_path(self) -> None:
+        """
+        Loads or generates the DBT manifest path.
+
+        If the DAGSTER_DBT_PARSE_PROJECT_ON_LOAD environment variable is set,
+        this method will parse the DBT project and generate a new manifest.
+        Otherwise, it will use the existing manifest file in the project directory.
+        """
         if os.getenv("DAGSTER_DBT_PARSE_PROJECT_ON_LOAD"):
             if self._dbt_resource.sources_file_path_:
                 self.update_dbt_sources()
@@ -285,7 +301,11 @@ class DBTAssetCreator(BaseAssetCreator):
         for dbt_asset in dbt_config_assets:
             partition = partitions.get(dbt_asset.asset_key)
             partition_params = (
-                generate_partition_params(partition) if partition else None
+                generate_partition_params(
+                    partition.model_dump(exclude_defaults=True, exclude_unset=True)
+                )
+                if partition
+                else None
             )
 
             all_dbt_assets.append(

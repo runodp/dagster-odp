@@ -1,23 +1,19 @@
 from typing import Any, Dict
 
-from dagster._core.definitions.partition import DEFAULT_DATE_FORMAT, ScheduleType
-from dagster._utils.partitions import DEFAULT_HOURLY_FORMAT_WITHOUT_TIMEZONE
-
-from ..config_manager.models.workflow_model import PartitionParams
+from google.cloud.bigquery.table import TimePartitioning
 
 
-def generate_partition_params(partition_params: PartitionParams) -> Dict[str, Any]:
+def replace_bq_job_params(params: Dict[str, Any]) -> Dict[str, Any]:
     """
-    Generates dagster partition parameters
+    Replaces placeholders in the BigQuery job parameters with the corresponding values.
+
+    Args:
+        params (Dict[str, Any]): BigQuery job parameters.
+
+    Returns:
+        Dict[str, Any]: Updated BigQuery job parameters.
     """
-    params = partition_params.model_dump(exclude_defaults=True, exclude_unset=True)
-    if not params.get("fmt"):
-        params["fmt"] = (
-            DEFAULT_HOURLY_FORMAT_WITHOUT_TIMEZONE
-            if params["schedule_type"] == "HOURLY"
-            else DEFAULT_DATE_FORMAT
-        )
-    if params["schedule_type"] == "MONTHLY" and not params.get("day_offset"):
-        params["day_offset"] = 1
-    params["schedule_type"] = getattr(ScheduleType, params["schedule_type"])
+
+    if "time_partitioning" in params:
+        params["time_partitioning"] = TimePartitioning(**params["time_partitioning"])
     return params

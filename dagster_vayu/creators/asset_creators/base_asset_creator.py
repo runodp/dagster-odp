@@ -1,10 +1,9 @@
 from abc import ABC, abstractmethod
-from typing import List, Self
+from typing import List
 
 from dagster import AssetsDefinition
 
-from ...config_manager.builders.config_builder import ConfigBuilder
-from ...config_manager.builders.workflow_builder import WorkflowBuilder
+from ...config_manager.builders import ConfigBuilder, WorkflowBuilder
 
 
 class BaseAssetCreator(ABC):
@@ -12,8 +11,7 @@ class BaseAssetCreator(ABC):
     An abstract base class for asset managers.
 
     This class provides a common interface and some basic functionality
-    for asset managers. It uses a singleton pattern to ensure only one
-    instance exists.
+    for asset managers.
 
     Attributes:
         _wb (WorkflowBuilder): An instance of WorkflowBuilder.
@@ -23,13 +21,6 @@ class BaseAssetCreator(ABC):
         _build_asset(): Abstract method to build an asset.
         get_assets(): Abstract method to retrieve assets.
     """
-
-    _instance = None
-
-    def __new__(cls) -> Self:
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-        return cls._instance
 
     def __init__(self) -> None:
         self._wb = WorkflowBuilder()
@@ -48,3 +39,4 @@ class BaseAssetCreator(ABC):
             List[AssetsDefinition]: A list of Dagster AssetsDefinition objects
             representing the assets managed by this asset manager.
         """
+        raise NotImplementedError("Subclasses must implement get_assets method")

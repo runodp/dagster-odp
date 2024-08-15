@@ -2,9 +2,9 @@ from typing import Any, Dict
 
 from google.cloud import bigquery as bq
 
-from ...utils import replace_bq_job_params
 from ..manager.base_task import BaseTask
 from ..manager.task_registry import task
+from ..utils import replace_bq_job_params
 
 
 @task(task_type="gcs_file_to_bq")

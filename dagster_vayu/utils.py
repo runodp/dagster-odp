@@ -2,9 +2,6 @@ from collections import defaultdict
 from typing import Any, Callable, Dict, List, TypeVar
 
 import chevron
-from dateutil import parser
-from google.cloud.bigquery.table import TimePartitioning
-
 from dagster import (
     AssetExecutionContext,
     AssetKey,
@@ -12,6 +9,7 @@ from dagster import (
     DagsterInvariantViolationError,
     EventRecordsFilter,
 )
+from dateutil import parser
 
 T = TypeVar("T", Dict, List, str)
 
@@ -25,16 +23,6 @@ def has_partition_def(context: AssetExecutionContext, input_name: str) -> bool:
         return partitions_def is not None
     except DagsterInvariantViolationError:
         return False
-
-
-def replace_bq_job_params(params: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Replaces placeholders in the BigQuery job parameters with the corresponding values.
-    """
-
-    if "time_partitioning" in params:
-        params["time_partitioning"] = TimePartitioning(**params["time_partitioning"])
-    return params
 
 
 class ConfigParamReplacer:

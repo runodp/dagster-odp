@@ -18,20 +18,19 @@ from .base_asset_creator import BaseAssetCreator
 
 class DLTAssetCreator(BaseAssetCreator):
     """
-    A concrete implementation of BaseAssetManager for managing DLT assets.
+    A concrete implementation of BaseAssetCreator for managing DLT assets.
 
     This class is responsible for building and retrieving asset definitions
     specifically for DLT assets.
 
     Attributes:
         _dlt_assets (List[AssetsDefinition]): A list to store DLT asset definitions.
-        dlt_asset_names (Dict[str, List[List[str]]]): A dict mapping op names to assets.
 
     Methods:
-        _get_dlt_destination_objects(): Retrieves objects from DLT schema files.
-        _build_asset(): Builds a DLT asset definition based on the given DLT asset spec.
-        _build_external_asset_spec(): Builds an external asset spec.
-        get_assets(): Retrieves or builds all DLT asset definitions for the workflow.
+        __init__: Initializes the DLTAssetCreator.
+        _get_dlt_destination_objects: Retrieves objects from DLT schema files.
+        _build_asset: Builds a DLT asset definition based on the given DLT asset spec.
+        get_assets: Retrieves or builds all DLT asset definitions for the workflow.
     """
 
     def __init__(self) -> None:

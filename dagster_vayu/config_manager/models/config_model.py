@@ -31,7 +31,7 @@ def validate_resource_names(value: str) -> str:
     return value
 
 
-class Task(BaseModel):
+class TaskConfig(BaseModel):
     name: str
     required_resources: List[
         Annotated[str, BeforeValidator(validate_resource_names)]
@@ -40,7 +40,7 @@ class Task(BaseModel):
     storage_kind: Optional[str] = None
 
 
-class Sensor(BaseModel):
+class SensorConfig(BaseModel):
     name: str
     required_resources: List[
         Annotated[str, BeforeValidator(validate_resource_names)]
@@ -56,5 +56,5 @@ class ResourceConfig(BaseModel):
 
 class DagsterConfig(BaseModel):
     resources: ResourceConfig = ResourceConfig()
-    tasks: List[Task] = []
-    sensors: List[Sensor] = []
+    tasks: List[TaskConfig] = []
+    sensors: List[SensorConfig] = []

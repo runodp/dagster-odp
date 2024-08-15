@@ -2,7 +2,7 @@ from typing import Dict
 
 from dagster import AssetExecutionContext
 
-from ..config_manager.builders.config_builder import ConfigBuilder
+from ..config_manager.builders import ConfigBuilder
 from ..utils import ConfigParamReplacer
 
 

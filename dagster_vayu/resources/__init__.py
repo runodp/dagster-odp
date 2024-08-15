@@ -2,9 +2,8 @@ from typing import Any, Dict, Optional
 
 from dagster import AssetExecutionContext, ConfigurableResource
 from dagster_dbt import DbtCliResource
-from dagster_gcp import BigQueryResource, GCSResource
+from dagster_gcp import BigQueryResource
 
-from ..config_manager.builders.config_builder import ConfigBuilder
 from .dlt_resource import VayuDltResource
 from .utils import update_config_params
 
@@ -64,33 +63,6 @@ class VayuDbtResource(DbtCliResource):  # type: ignore[misc]
         return update_config_params(context, config)
 
 
-RESOURCE_CLASS_MAP = {
-    "dbt": VayuDbtResource,
-    "bigquery": VayuBigQueryResource,
-    "gcs": GCSResource,
-    "dlt": VayuDltResource,
-}
-
-
-def _filter_resource_params(params: Dict[str, Any]) -> Any:
-    return {k: v for k, v in params.items() if not k.endswith("_")}
-
-
-def get_dagster_resources() -> Dict[str, Any]:
-    """
-    Create and return a dictionary of dagster resources based on the resource
-    configuration. Only the parameters that do not end with an underscore ("_")
-    are passed to the resource classes.
-    (Parameters that end with an _ are to be used in the dagster project itself.)
-
-    Returns:
-        Dict: A dictionary containing the created resources.
-    """
-    resources: Dict[str, Any] = {}
-    dagster_resource_config = ConfigBuilder().get_config()
-    for resource_name, params in dagster_resource_config.resources.model_dump().items():
-        if (not params) or (resource_name not in RESOURCE_CLASS_MAP):
-            continue
-        resource_class = RESOURCE_CLASS_MAP[resource_name]
-        resources[resource_name] = resource_class(**_filter_resource_params(params))
-    return resources
+__all__ = [
+    "VayuDltResource",
+]
