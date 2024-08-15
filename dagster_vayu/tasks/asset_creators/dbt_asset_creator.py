@@ -15,7 +15,7 @@ from dagster import (
 from dagster_dbt import DagsterDbtTranslator, DbtCliEventMessage, dbt_assets
 
 from ...config_manager.models.workflow_model import DBTParams, DBTTask
-from ...resources import VayuDbtResource, get_dagster_resources
+from ...resources import get_dagster_resources
 from ..utils import generate_partition_params
 from .base_asset_creator import BaseAssetCreator
 
@@ -189,12 +189,12 @@ class DBTAssetCreator(BaseAssetCreator):
         dest_info = event.raw_event["data"]["node_info"]["node_relation"]
         return {"destination_table_id": f"{dest_info['schema']}.{dest_info['alias']}"}
 
-    def _execute_dbt_asset_fn(
+    def _materialize_dbt_asset(
         self,
         context: AssetExecutionContext,
-        dbt: VayuDbtResource,
         dbt_vars: Dict[str, str],
     ) -> Iterator[Any]:
+        dbt = context.resources.dbt
 
         replaced_dbt_vars = dbt.update_config_params(context=context, config=dbt_vars)
 
@@ -251,8 +251,7 @@ class DBTAssetCreator(BaseAssetCreator):
             dagster_dbt_translator=custom_dbt_translator,
         )
         def _dbt_assets(context: AssetExecutionContext) -> Iterator[Any]:
-            dbt = context.resources.dbt
-            yield from self._execute_dbt_asset_fn(context, dbt, dbt_vars)
+            yield from self._materialize_dbt_asset(context, dbt_vars)
 
         return _dbt_assets
 

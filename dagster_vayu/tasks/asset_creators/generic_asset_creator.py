@@ -46,7 +46,7 @@ class GenericAssetCreator(BaseAssetCreator):
         task.set_resources(resource_map)
         return task.run()
 
-    def _execute_asset_fn(
+    def _materialize_asset(
         self,
         context: AssetExecutionContext,
         spec: TaskTypeUnion,
@@ -125,7 +125,7 @@ class GenericAssetCreator(BaseAssetCreator):
             ),
         )
         def _asset_def(context: AssetExecutionContext) -> MaterializeResult:
-            return self._execute_asset_fn(context, spec, required_resources)
+            return self._materialize_asset(context, spec, required_resources)
 
         return _asset_def
 
