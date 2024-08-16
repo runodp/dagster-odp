@@ -1,3 +1,5 @@
+from typing import Optional
+
 from dagster import Definitions
 
 from .config_manager.builders import ConfigBuilder, WorkflowBuilder
@@ -13,7 +15,7 @@ from .sensors.definitions.gcs_sensor import *  # noqa
 from .tasks.definitions.gcp import *  # noqa
 
 
-def build_definitions() -> Definitions:
+def build_definitions(config_path: Optional[str] = None) -> Definitions:
     """
     Build and return Dagster Definitions for the project.
 
@@ -21,12 +23,16 @@ def build_definitions() -> Definitions:
     based on the config files. It conditionally includes DBT and
     DLT assets if the corresponding resources are available.
 
+    Args:
+        config_path (Optional[str]): The path to the config files.
+            If not provided, the VAYU_CONFIG_PATH environment variable will be used.
+
     Returns:
         Definitions: A Dagster Definitions object containing all the dagster components.
     """
 
-    wb = WorkflowBuilder()
-    dagster_config = ConfigBuilder().get_config()
+    wb = WorkflowBuilder(config_path=config_path)
+    dagster_config = ConfigBuilder(config_path=config_path).get_config()
     resources = get_dagster_resources(dagster_config.resources.model_dump())
     job_defs = get_jobs(wb)
     sensor_defs = get_sensors(wb, dagster_config.sensors)

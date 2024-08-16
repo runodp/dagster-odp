@@ -27,12 +27,19 @@ class BaseBuilder(ABC):
             cls._instance = super().__new__(cls, *args, **kwargs)
         return cls._instance
 
-    def __init__(self, config_data: Optional[Dict] = None) -> None:
-        config_path = Path(os.environ.get("CONFIG_PATH", "")).resolve()
-        self.load_config(config_data, config_path)
+    def __init__(
+        self, config_data: Optional[Dict] = None, config_path: Optional[str] = None
+    ) -> None:
+        if config_path:
+            path_obj = Path(config_path).resolve()
+        else:
+            path_obj = Path(os.environ.get("VAYU_CONFIG_PATH", "")).resolve()
+        self.load_config(config_data, path_obj)
 
     @abstractmethod
-    def load_config(self, config_data: Optional[Dict], config_path: Path) -> None:
+    def load_config(
+        self, config_data: Optional[Dict], config_path: Optional[Path]
+    ) -> None:
         """Load configuration from files."""
 
     @abstractmethod

@@ -29,18 +29,26 @@ class WorkflowBuilder(BaseBuilder):
 
     """
 
-    def load_config(self, config_data: Optional[Dict], config_path: Path) -> None:
+    def load_config(
+        self, config_data: Optional[Dict], config_path: Optional[Path]
+    ) -> None:
         if config_data:
             self._config = WorkflowConfig.model_validate(config_data)
-        else:
-            workflow_dir = config_path / "workflows"
-            if not workflow_dir.exists():
-                self._config = WorkflowConfig()
-            else:
-                consolidated_data = self._consolidate_workflow_data(workflow_dir)
-                self._config = WorkflowConfig.model_validate(
-                    consolidated_data, context={"consolidated": True}
-                )
+            return
+
+        if config_path is None:
+            self._config = WorkflowConfig()
+            return
+
+        workflow_dir = config_path / "workflows"
+        if not workflow_dir.exists():
+            self._config = WorkflowConfig()
+            return
+
+        consolidated_data = self._consolidate_workflow_data(workflow_dir)
+        self._config = WorkflowConfig.model_validate(
+            consolidated_data, context={"consolidated": True}
+        )
 
     def get_config(self) -> WorkflowConfig:
         return self._config

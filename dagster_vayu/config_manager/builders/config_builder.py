@@ -16,17 +16,25 @@ class ConfigBuilder(BaseBuilder):
 
     """
 
-    def load_config(self, config_data: Optional[Dict], config_path: Path) -> None:
+    def load_config(
+        self, config_data: Optional[Dict], config_path: Optional[Path]
+    ) -> None:
         if config_data:
             self._config = DagsterConfig(**config_data)
-        else:
-            resources_file = config_path / "dagster_config.json"
-            if not resources_file.exists():
-                self._config = DagsterConfig()
-            else:
-                with resources_file.open("r", encoding="utf-8") as file:
-                    data = json.load(file)
-                self._config = DagsterConfig(**data)
+            return
+
+        if config_path is None:
+            self._config = DagsterConfig()
+            return
+
+        resources_file = config_path / "dagster_config.json"
+        if not resources_file.exists():
+            self._config = DagsterConfig()
+            return
+
+        with resources_file.open("r", encoding="utf-8") as file:
+            data = json.load(file)
+            self._config = DagsterConfig(**data)
 
     def get_config(self) -> DagsterConfig:
         return self._config
