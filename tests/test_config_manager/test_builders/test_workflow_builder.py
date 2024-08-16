@@ -1,12 +1,12 @@
 import json
-from pathlib import Path
 
 import pytest
-from task_nicely_core.configs.builders.workflow_builder import WorkflowBuilder
-from task_nicely_core.configs.models.workflow_model import (
-    BQTableToGCSTask,
+
+from dagster_vayu.config_manager.builders.workflow_builder import WorkflowBuilder
+from dagster_vayu.config_manager.models.workflow_model import (
     DBTTask,
-    GCSFileToBQTask,
+    DLTTask,
+    GenericTask,
     ScheduleTrigger,
     SensorTrigger,
     WorkflowConfig,
@@ -64,13 +64,15 @@ SAMPLE_WORKFLOW_CONFIG = {
         },
         {
             "asset_key": "asset3",
-            "task_type": "bq_table_to_gcs",
-            "description": "BQ to GCS task",
+            "task_type": "dlt",
+            "description": "DLT task",
             "group_name": "test_group",
             "params": {
-                "destination_file_uri": "gs://test-bucket/output/test-file.parquet",
-                "source_table_id": "test_dataset.test_table",
-                "job_config_params": {"destination_format": "PARQUET"},
+                "source_module": "test_module.test_function",
+                "source_params": {},
+                "destination": "bigquery",
+                "destination_params": {},
+                "pipeline_params": {"dataset_name": "test_dataset"},
             },
         },
     ],
@@ -95,7 +97,100 @@ def test_load_config(workflow_builder):
     assert len(workflow_builder._config.partitions) == 1
 
 
-def test_consolidate_workflow_data(workflow_builder, tmpdir):
+def test_triggers(workflow_builder):
+    triggers = workflow_builder.triggers
+    assert len(triggers) == 1
+    assert "test_job" in triggers[0]
+    assert len(triggers[0]["test_job"]) == 2
+    assert isinstance(triggers[0]["test_job"][0], ScheduleTrigger)
+    assert isinstance(triggers[0]["test_job"][1], SensorTrigger)
+
+
+def test_generic_assets(workflow_builder):
+    generic_assets = workflow_builder.generic_assets
+    assert len(generic_assets) == 1
+    assert isinstance(generic_assets[0], GenericTask)
+    assert generic_assets[0].asset_key == "asset1"
+
+
+def test_sensors(workflow_builder):
+    sensors = workflow_builder.sensors
+    assert len(sensors) == 1
+    assert isinstance(sensors[0], SensorTrigger)
+    assert sensors[0].trigger_id == "test_sensor_1"
+
+
+def test_jobs(workflow_builder):
+    jobs = workflow_builder.jobs
+    assert len(jobs) == 1
+    assert isinstance(jobs[0], WorkflowJob)
+    assert jobs[0].job_id == "test_job"
+
+
+def test_partitions(workflow_builder):
+    partitions = workflow_builder.partitions
+    assert len(partitions) == 1
+    assert partitions[0].assets == ["asset1", "asset2", "asset3"]
+
+
+def test_get_assets_with_task_type(workflow_builder):
+    dbt_assets = workflow_builder.get_assets_with_task_type(DBTTask)
+    assert len(dbt_assets) == 1
+    assert dbt_assets[0].asset_key == "asset2"
+
+    dlt_assets = workflow_builder.get_assets_with_task_type(DLTTask)
+    assert len(dlt_assets) == 1
+    assert dlt_assets[0].asset_key == "asset3"
+
+    generic_assets = workflow_builder.get_assets_with_task_type(GenericTask)
+    assert len(generic_assets) == 1
+    assert generic_assets[0].asset_key == "asset1"
+
+
+def test_job_ids(workflow_builder):
+    job_ids = workflow_builder.job_ids
+    assert job_ids == ["test_job"]
+
+
+def test_asset_key_type_map(workflow_builder):
+    asset_key_type_map = workflow_builder.asset_key_type_map
+    assert len(asset_key_type_map) == 3
+    assert asset_key_type_map["asset1"] == GenericTask
+    assert asset_key_type_map["asset2"] == DBTTask
+    assert asset_key_type_map["asset3"] == DLTTask
+
+
+def test_asset_key_dbt_params_map(workflow_builder):
+    dbt_params_map = workflow_builder.asset_key_dbt_params_map
+    assert len(dbt_params_map) == 1
+    assert "asset1" in dbt_params_map
+    assert dbt_params_map["asset1"].source_name == "test_source"
+    assert dbt_params_map["asset1"].table_name == "test_table"
+
+
+def test_asset_key_partition_map(workflow_builder):
+    asset_key_partition_map = workflow_builder.asset_key_partition_map
+    assert len(asset_key_partition_map) == 3
+    assert "asset1" in asset_key_partition_map
+    assert "asset2" in asset_key_partition_map
+    assert "asset3" in asset_key_partition_map
+    assert asset_key_partition_map["asset1"].schedule_type == "MONTHLY"
+
+
+def test_job_id_trigger_map(workflow_builder):
+    schedule_map = workflow_builder.job_id_trigger_map("schedule")
+    assert len(schedule_map) == 1
+    assert "test_job" in schedule_map
+    assert len(schedule_map["test_job"]) == 1
+    assert schedule_map["test_job"][0].trigger_id == "test_schedule"
+
+
+def test_job_id_trigger_map_invalid_type(workflow_builder):
+    with pytest.raises(ValueError):
+        workflow_builder.job_id_trigger_map("invalid_type")
+
+
+def test_consolidate_workflow_data(tmp_path):
     # Create a second config to simulate multiple files
     second_config = {
         "jobs": [
@@ -127,11 +222,14 @@ def test_consolidate_workflow_data(workflow_builder, tmpdir):
     }
 
     # Write the config files to the temporary directory
-    tmpdir.join("file1.json").write(json.dumps(SAMPLE_WORKFLOW_CONFIG))
-    tmpdir.join("file2.json").write(json.dumps(second_config))
+    (tmp_path / "file1.json").write_text(json.dumps(SAMPLE_WORKFLOW_CONFIG))
+    (tmp_path / "file2.json").write_text(json.dumps(second_config))
+
+    # Create a new WorkflowBuilder instance for this test
+    workflow_builder = WorkflowBuilder()
 
     # Run the consolidate_workflow_data method
-    result = workflow_builder._consolidate_workflow_data(Path(tmpdir))
+    result = workflow_builder._consolidate_workflow_data(tmp_path)
 
     assert "jobs" in result
     assert "assets" in result
@@ -156,99 +254,6 @@ def test_consolidate_workflow_data(workflow_builder, tmpdir):
     ]
     assert "MONTHLY" in partition_types
     assert "DAILY" in partition_types
-
-
-def test_triggers(workflow_builder):
-    triggers = workflow_builder.triggers
-    assert len(triggers) == 1
-    assert "test_job" in triggers[0]
-    assert len(triggers[0]["test_job"]) == 2
-    assert isinstance(triggers[0]["test_job"][0], ScheduleTrigger)
-    assert isinstance(triggers[0]["test_job"][1], SensorTrigger)
-
-
-def test_sensors(workflow_builder):
-    sensors = workflow_builder.sensors
-    assert len(sensors) == 1
-    assert isinstance(sensors[0], SensorTrigger)
-    assert sensors[0].trigger_id == "test_sensor_1"
-
-
-def test_assets(workflow_builder):
-    assets = workflow_builder.assets
-    assert len(assets) == 2  # Excludes DBT asset
-    assert isinstance(assets[0], GCSFileToBQTask)
-    assert isinstance(assets[1], BQTableToGCSTask)
-
-
-def test_jobs(workflow_builder):
-    jobs = workflow_builder.jobs
-    assert len(jobs) == 1
-    assert isinstance(jobs[0], WorkflowJob)
-    assert jobs[0].job_id == "test_job"
-
-
-def test_partitions(workflow_builder):
-    partitions = workflow_builder.partitions
-    assert len(partitions) == 1
-    assert partitions[0].assets == ["asset1", "asset2", "asset3"]
-
-
-def test_get_assets_with_task_type(workflow_builder):
-    dbt_assets = workflow_builder.get_assets_with_task_type(DBTTask)
-    assert len(dbt_assets) == 1
-    assert dbt_assets[0].asset_key == "asset2"
-
-    gcs_to_bq_assets = workflow_builder.get_assets_with_task_type(GCSFileToBQTask)
-    assert len(gcs_to_bq_assets) == 1
-    assert gcs_to_bq_assets[0].asset_key == "asset1"
-
-
-def test_job_ids(workflow_builder):
-    job_ids = workflow_builder.job_ids
-    assert job_ids == ["test_job"]
-
-
-def test_asset_key_type_map(workflow_builder):
-    asset_key_type_map = workflow_builder.asset_key_type_map
-    assert len(asset_key_type_map) == 3
-    assert asset_key_type_map["asset1"] == GCSFileToBQTask
-    assert asset_key_type_map["asset2"] == DBTTask
-    assert asset_key_type_map["asset3"] == BQTableToGCSTask
-
-
-def test_asset_key_dbt_params_map(workflow_builder):
-    dbt_params_map = workflow_builder.asset_key_dbt_params_map
-
-    assert len(dbt_params_map) == 1
-    assert "asset1" in dbt_params_map
-    assert "asset2" not in dbt_params_map
-    assert "asset3" not in dbt_params_map
-
-    assert dbt_params_map["asset1"].source_name == "test_source"
-    assert dbt_params_map["asset1"].table_name == "test_table"
-
-
-def test_asset_key_partition_map(workflow_builder):
-    asset_key_partition_map = workflow_builder.asset_key_partition_map
-    assert len(asset_key_partition_map) == 3
-    assert "asset1" in asset_key_partition_map
-    assert "asset2" in asset_key_partition_map
-    assert "asset3" in asset_key_partition_map
-    assert asset_key_partition_map["asset1"].schedule_type == "MONTHLY"
-
-
-def test_job_id_trigger_map(workflow_builder):
-    schedule_map = workflow_builder.job_id_trigger_map("schedule")
-    assert len(schedule_map) == 1
-    assert "test_job" in schedule_map
-    assert len(schedule_map["test_job"]) == 1
-    assert schedule_map["test_job"][0].trigger_id == "test_schedule"
-
-
-def test_job_id_trigger_map_invalid_type(workflow_builder):
-    with pytest.raises(ValueError):
-        workflow_builder.job_id_trigger_map("invalid_type")
 
 
 def test_update_consolidated_data(workflow_builder):

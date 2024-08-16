@@ -24,7 +24,7 @@ class BaseBuilder(ABC):
 
     def __new__(cls, *args: Any, **kwargs: Any) -> Self:
         if cls._instance is None:
-            cls._instance = super().__new__(cls, *args, **kwargs)
+            cls._instance = super().__new__(cls)
         return cls._instance
 
     def __init__(

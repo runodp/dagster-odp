@@ -53,6 +53,7 @@ class ConfigParamReplacer:
         """
         Formats a date string using the specified format.
         """
+        date_str, fmt = "", ""
         try:
             result = render(text)
             date_str, fmt = result.split("|")

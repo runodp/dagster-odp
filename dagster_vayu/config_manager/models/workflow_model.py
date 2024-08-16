@@ -127,15 +127,15 @@ class DBTTaskParams(WorkflowParams):
 
 class WorkflowTask(BaseModel):
     asset_key: str
-    task_type: str
     params: Any
+
+
+class GenericTask(WorkflowTask):
+    task_type: str
     description: Optional[str] = ""
     group_name: Optional[str] = None
     depends_on: Optional[List[str]] = None
     dbt_params: Optional[DBTParams] = None
-
-
-class GenericTask(WorkflowTask):
 
     @field_validator("task_type")
     @classmethod
@@ -162,6 +162,8 @@ class DBTTask(WorkflowTask):
 class DLTTask(WorkflowTask):
     params: DLTParams
     task_type: Literal["dlt"]
+    description: Optional[str] = ""
+    group_name: Optional[str] = None
     depends_on: Literal[None] = None
     dbt_params: Literal[None] = None
 

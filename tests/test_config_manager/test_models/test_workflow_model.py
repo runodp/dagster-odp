@@ -1,6 +1,7 @@
 import pytest
 from pydantic import ValidationError
-from task_nicely_core.configs.models.workflow_model import (
+
+from dagster_vayu.config_manager.models.workflow_model import (
     DLTTask,
     ScheduleCronTrigger,
     WorkflowConfig,
@@ -33,12 +34,13 @@ def test_validate_pipeline():
     valid_dlt_task = DLTTask(
         **{
             "asset_key": "valid_dlt_task",
-            "task_type": "dlt_to_bq",
+            "task_type": "dlt",
             "params": {
                 "source_module": "test_module",
-                "source": {},
-                "destination": {},
-                "pipeline": {"dataset_name": "test_dataset"},
+                "source_params": {},
+                "destination": "bigquery",
+                "destination_params": {},
+                "pipeline_params": {"dataset_name": "test_dataset"},
             },
         }
     )
@@ -49,12 +51,13 @@ def test_validate_pipeline():
         DLTTask(
             **{
                 "asset_key": "invalid_dlt_task",
-                "task_type": "dlt_to_bq",
+                "task_type": "dlt",
                 "params": {
                     "source_module": "test_module",
-                    "source": {},
-                    "destination": {},
-                    "pipeline": {},
+                    "source_params": {},
+                    "destination": "bigquery",
+                    "destination_params": {},
+                    "pipeline_params": {},
                 },
             },
         )
@@ -63,12 +66,11 @@ def test_validate_pipeline():
 @pytest.mark.parametrize(
     "input_data,expected_output",
     [
-        ({"task_type": "dlt_to_bq"}, "dlt"),
-        ({"task_type": "dlt_to_gcs"}, "dlt"),
-        ({"task_type": "gcs_file_to_bq"}, "gcs_file_to_bq"),
-        ({"task_type": "bq_table_to_gcs"}, "bq_table_to_gcs"),
+        ({"task_type": "dlt"}, "dlt"),
+        ({"task_type": "gcs_file_to_bq"}, "generic"),
+        ({"task_type": "bq_table_to_gcs"}, "generic"),
         ({"task_type": "dbt"}, "dbt"),
-        ({"task_type": "custom_task"}, "custom"),
+        ({"task_type": "custom_task"}, "generic"),
     ],
 )
 def test_task_discriminator(input_data, expected_output):
@@ -94,12 +96,12 @@ def test_validate_partition_schedule():
                     {
                         "trigger_id": "trigger1",
                         "trigger_type": "schedule",
-                        "params": {"schedule_kind": "partition"},
+                        "params": {"schedule_kind": "partition", "schedule_params": {}},
                     },
                     {
                         "trigger_id": "trigger2",
                         "trigger_type": "schedule",
-                        "params": {"schedule_kind": "partition"},
+                        "params": {"schedule_kind": "partition", "schedule_params": {}},
                     },
                 ],
                 "asset_selection": set(),
