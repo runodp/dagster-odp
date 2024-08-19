@@ -4,8 +4,8 @@ from dagster import AssetExecutionContext, ConfigurableResource
 from dagster_dbt import DbtCliResource
 from dagster_gcp import BigQueryResource
 
+from . import utils
 from .dlt_resource import VayuDltResource
-from .utils import update_config_params
 
 
 class SensorContextConfig(ConfigurableResource):  # type: ignore[misc]
@@ -60,7 +60,7 @@ class VayuDbtResource(DbtCliResource):  # type: ignore[misc]
         Returns:
             Dict
         """
-        return update_config_params(context, config)
+        return utils.update_config_params(context, config)
 
 
 __all__ = [

@@ -61,27 +61,3 @@ def test_load_config_with_no_data_no_file():
     assert config.resources == DagsterConfig().resources
     assert config.tasks == []
     assert config.sensors == []
-
-
-# def test_get_dagster_resources(config_builder):
-#     resources = config_builder.get_dagster_resources()
-#     assert isinstance(resources["bigquery"], BigQueryResource)
-#     assert isinstance(resources["gcs"], GCSResource)
-#     assert resources["bigquery"].project == "test-project"
-#     assert resources["bigquery"].location == "us-east1"
-#     assert resources["gcs"].project == "test-project"
-
-
-# def test_get_dagster_resources_empty():
-#     empty_config = {"resources": {}, "tasks": []}
-#     config_builder = ConfigBuilder(config_data=empty_config)
-#     resources = config_builder.get_dagster_resources()
-#     assert resources == {}
-
-
-# def test_filter_resource_params(config_builder):
-# params = {
-#     "project_dir": "/path/to/dbt", "sources_file_path_": "models/sources.yml"}
-#     filtered_params = config_builder._filter_resource_params(params)
-#     assert filtered_params == {"project_dir": "/path/to/dbt"}
-#     assert "sources_file_path_" not in filtered_params

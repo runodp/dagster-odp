@@ -1,21 +1,25 @@
 from unittest.mock import Mock, patch
 
 import pytest
-from task_nicely_core.configs.builders.workflow_builder import WorkflowBuilder
-from task_nicely_core.configs.models.workflow_model import (
-    ScheduleCronParams,
-    ScheduleCronTrigger,
-    SchedulePartitionTrigger,
-    ScheduleTrigger,
-)
-from task_nicely_core.schedules.schedule_creator import ScheduleCreator
-
 from dagster import ScheduleDefinition
 from dagster._core.definitions.partitioned_schedule import (
     UnresolvedPartitionedAssetScheduleDefinition,
 )
 from dagster._core.definitions.unresolved_asset_job_definition import (
     UnresolvedAssetJobDefinition,
+)
+
+from dagster_vayu.config_manager.builders.workflow_builder import WorkflowBuilder
+from dagster_vayu.config_manager.models.workflow_model import (
+    ScheduleCronParams,
+    ScheduleCronTrigger,
+    SchedulePartitionTrigger,
+    ScheduleTrigger,
+)
+from dagster_vayu.creators.schedule_creator import (
+    _create_cron_schedule,
+    _create_partition_schedule,
+    get_schedules,
 )
 
 
@@ -29,9 +33,7 @@ def mock_workflow_builder():
                 trigger_type="schedule",
                 params=ScheduleCronTrigger(
                     schedule_kind="cron",
-                    schedule_params=ScheduleCronParams(
-                        **{"cron_schedule": "0 * * * *"}
-                    ),
+                    schedule_params=ScheduleCronParams(cron_schedule="0 * * * *"),
                 ),
             ),
             ScheduleTrigger(
@@ -48,9 +50,7 @@ def mock_workflow_builder():
                 trigger_type="schedule",
                 params=ScheduleCronTrigger(
                     schedule_kind="cron",
-                    schedule_params=ScheduleCronParams(
-                        **{"cron_schedule": "0 0 * * *"}
-                    ),
+                    schedule_params=ScheduleCronParams(cron_schedule="0 0 * * *"),
                 ),
             ),
         ],
@@ -68,27 +68,20 @@ def job_defs():
 
 
 @pytest.fixture
-def schedule_creator(mock_workflow_builder):
-    with patch(
-        "task_nicely_core.schedules.schedule_creator.WorkflowBuilder",
-        return_value=mock_workflow_builder,
-    ):
-        return ScheduleCreator()
-
-
-@pytest.fixture
 def mock_schedule_builders():
     def create_schedule_mock(name, spec):
         mock = Mock(spec=spec)
         mock.configure_mock(name=name)
         return mock
 
-    with patch(
-        "task_nicely_core.schedules.schedule_creator.ScheduleDefinition"
-    ) as mock_schedule_def, patch(
-        "task_nicely_core.schedules.schedule_creator"
-        ".build_schedule_from_partitioned_job"
-    ) as mock_build:
+    with (
+        patch(
+            "dagster_vayu.creators.schedule_creator.ScheduleDefinition"
+        ) as mock_schedule_def,
+        patch(
+            "dagster_vayu.creators.schedule_creator.build_schedule_from_partitioned_job"
+        ) as mock_build,
+    ):
         mock_schedule_def.side_effect = lambda **kwargs: create_schedule_mock(
             kwargs["name"], ScheduleDefinition
         )
@@ -98,15 +91,15 @@ def mock_schedule_builders():
         yield mock_schedule_def, mock_build
 
 
-def test_create_cron_schedule(schedule_creator):
+def test_create_cron_schedule():
     trigger_id = "test_cron"
     params = ScheduleCronTrigger(
         schedule_kind="cron",
-        schedule_params=ScheduleCronParams(**{"cron_schedule": "0 * * * *"}),
+        schedule_params=ScheduleCronParams(cron_schedule="0 * * * *"),
     )
     job_id = "test_job"
 
-    schedule = schedule_creator._create_cron_schedule(trigger_id, params, job_id)
+    schedule = _create_cron_schedule(trigger_id, params, job_id)
 
     assert isinstance(schedule, ScheduleDefinition)
     assert schedule.name == "test_cron"
@@ -114,23 +107,22 @@ def test_create_cron_schedule(schedule_creator):
     assert schedule.job_name == "test_job"
 
 
-def test_create_partition_schedule(schedule_creator):
+def test_create_partition_schedule():
     trigger_id = "test_partition"
     params = {}
     job_def = Mock(spec=UnresolvedAssetJobDefinition)
 
     with patch(
-        "task_nicely_core.schedules.schedule_creator"
-        ".build_schedule_from_partitioned_job"
+        "dagster_vayu.creators.schedule_creator.build_schedule_from_partitioned_job"
     ) as mock_build:
-        schedule_creator._create_partition_schedule(trigger_id, params, job_def)
+        _create_partition_schedule(trigger_id, params, job_def)
         mock_build.assert_called_once_with(name="test_partition", job=job_def)
 
 
-def test_get_schedules(schedule_creator, job_defs, mock_schedule_builders):
+def test_get_schedules(mock_workflow_builder, job_defs, mock_schedule_builders):
     mock_schedule_def, mock_build = mock_schedule_builders
 
-    schedules = schedule_creator.get_schedules(job_defs)
+    schedules = get_schedules(mock_workflow_builder, job_defs)
 
     assert len(schedules) == 3
     assert all(isinstance(schedule, Mock) for schedule in schedules)
@@ -143,10 +135,10 @@ def test_get_schedules(schedule_creator, job_defs, mock_schedule_builders):
     assert mock_build.call_count == 1
 
 
-def test_get_schedules_job_not_found(schedule_creator):
+def test_get_schedules_job_not_found(mock_workflow_builder):
     job2 = Mock(spec=UnresolvedAssetJobDefinition)
     job2.configure_mock(name="job2")
     job_defs = [job2]
 
     with pytest.raises(ValueError, match="Job job1 for partition schedules not found."):
-        schedule_creator.get_schedules(job_defs)
+        get_schedules(mock_workflow_builder, job_defs)
