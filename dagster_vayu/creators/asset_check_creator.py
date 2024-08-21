@@ -6,6 +6,7 @@ from dagster import (
     AssetCheckResult,
     AssetChecksDefinition,
     AssetCheckSeverity,
+    AssetKey,
     asset_check,
 )
 
@@ -27,7 +28,7 @@ def _get_check_result(check_results: List[Dict[str, Any]]) -> AssetCheckResult:
 def _get_asset_check_def(check_params: Dict[str, Any]) -> AssetChecksDefinition:
     @asset_check(
         name=os.path.basename(check_params["check_file_path"]).split(".")[0],
-        asset=check_params["asset_key"],
+        asset=AssetKey(check_params["asset_key"].split("/")),
         required_resource_keys={"soda"},
         compute_kind="soda",
         blocking=check_params["blocking"],

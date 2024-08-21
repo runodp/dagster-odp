@@ -128,7 +128,7 @@ class DBTTaskParams(WorkflowParams):
 class SodaCheck(BaseModel):
     asset_key: str
     check_file_path: str
-    blocking: bool = True
+    blocking: Optional[bool] = True
     description: Optional[str] = ""
     data_source: str
 

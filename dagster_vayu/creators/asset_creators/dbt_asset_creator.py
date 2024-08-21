@@ -1,5 +1,6 @@
 import json
 import os
+from functools import cached_property
 from pathlib import Path
 from typing import Any, Dict, Iterator, List, Mapping, Optional
 
@@ -107,7 +108,7 @@ class DBTAssetCreator(BaseAssetCreator):
                 "target", "manifest.json"
             )
 
-    @property
+    @cached_property
     def _manifest_sources(self) -> Dict[str, Any]:
         with open(self._dbt_manifest_path, "r", encoding="utf-8") as file:
             manifest = json.load(file)
