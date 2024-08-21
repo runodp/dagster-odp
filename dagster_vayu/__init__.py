@@ -4,6 +4,7 @@ from dagster import Definitions
 
 from .config_manager.builders import ConfigBuilder, WorkflowBuilder
 from .creators import (
+    get_asset_checks,
     get_assets,
     get_dagster_resources,
     get_jobs,
@@ -37,6 +38,7 @@ def build_definitions(config_path: Optional[str] = None) -> Definitions:
     job_defs = get_jobs(wb)
     sensor_defs = get_sensors(wb, dagster_config.sensors)
     schedule_defs = get_schedules(wb, job_defs)
+    asset_check_defs = get_asset_checks(wb)
 
     resources["sensor_context"] = SensorContextConfig.configure_at_launch()
 
@@ -46,4 +48,5 @@ def build_definitions(config_path: Optional[str] = None) -> Definitions:
         jobs=job_defs,
         sensors=sensor_defs,
         schedules=schedule_defs,
+        asset_checks=asset_check_defs,
     )

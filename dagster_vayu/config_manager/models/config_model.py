@@ -24,6 +24,11 @@ class GcsResourceParams(BaseModel):
     project: str
 
 
+class SodaResourceParams(BaseModel):
+    project_dir: str
+    checks_dir: Optional[str] = None
+
+
 def validate_resource_names(value: str) -> str:
     """resources should be defined in ResourceConfig"""
     if value not in ResourceConfig.model_fields:
@@ -52,6 +57,7 @@ class ResourceConfig(BaseModel):
     dbt: Optional[DbtResourceParams] = None
     gcs: Optional[GcsResourceParams] = None
     dlt: Optional[DltResourceParams] = None
+    soda: Optional[SodaResourceParams] = None
 
 
 class DagsterConfig(BaseModel):

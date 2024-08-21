@@ -6,9 +6,10 @@ from dagster_gcp import BigQueryResource
 
 from . import utils
 from .dlt_resource import VayuDltResource
+from .soda_resource import SodaResource
 
 
-class SensorContextConfig(ConfigurableResource):  # type: ignore[misc]
+class SensorContextConfig(ConfigurableResource):
     """
     Configuration Resource for the sensor context.
 
@@ -39,7 +40,7 @@ class VayuBigQueryResource(BigQueryResource):
         return self.get_client()
 
 
-class VayuDbtResource(DbtCliResource):  # type: ignore[misc]
+class VayuDbtResource(DbtCliResource):
     """
     Custom DBT resource that extends DbtCliResource.
 
@@ -63,6 +64,4 @@ class VayuDbtResource(DbtCliResource):  # type: ignore[misc]
         return utils.update_config_params(context, config)
 
 
-__all__ = [
-    "VayuDltResource",
-]
+__all__ = ["VayuDltResource", "SodaResource"]

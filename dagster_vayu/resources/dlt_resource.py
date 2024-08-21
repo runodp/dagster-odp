@@ -17,7 +17,7 @@ from ..config_manager.models.workflow_model import DLTTask
 from .utils import update_config_params
 
 
-class VayuDltResource(ConfigurableResource):  # type: ignore[misc]
+class VayuDltResource(ConfigurableResource):
     """
     A configurable resource for managing DLT (Data Loading Tool) operations.
 

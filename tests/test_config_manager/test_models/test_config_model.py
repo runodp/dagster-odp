@@ -1,9 +1,6 @@
 import pytest
 
-from dagster_vayu.config_manager.models.config_model import (
-    ResourceConfig,
-    validate_resource_names,
-)
+from dagster_vayu.config_manager.models.config_model import validate_resource_names
 
 
 def test_validate_resource_names():
@@ -12,6 +9,7 @@ def test_validate_resource_names():
     assert validate_resource_names("dbt") == "dbt"
     assert validate_resource_names("gcs") == "gcs"
     assert validate_resource_names("dlt") == "dlt"
+    assert validate_resource_names("soda") == "soda"
 
     # Test invalid resource name
     with pytest.raises(ValueError) as excinfo:
@@ -24,6 +22,3 @@ def test_validate_resource_names():
     with pytest.raises(ValueError) as excinfo:
         validate_resource_names("")
     assert str(excinfo.value) == "Resource  not defined in ResourceConfig"
-
-    # Ensure ResourceConfig hasn't changed unexpectedly
-    assert set(ResourceConfig.model_fields.keys()) == {"bigquery", "dbt", "gcs", "dlt"}

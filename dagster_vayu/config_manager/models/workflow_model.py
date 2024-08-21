@@ -125,6 +125,14 @@ class DBTTaskParams(WorkflowParams):
     dbt_vars: Optional[Dict[str, str]] = {}
 
 
+class SodaCheck(BaseModel):
+    asset_key: str
+    check_file_path: str
+    blocking: bool = True
+    description: Optional[str] = ""
+    data_source: str
+
+
 class WorkflowTask(BaseModel):
     asset_key: str
     params: Any
@@ -225,6 +233,7 @@ class WorkflowConfig(BaseModel):
     jobs: List[WorkflowJob] = []
     assets: List[Asset] = []
     partitions: List[WorkflowPartition] = []
+    soda_checks: List[SodaCheck] = []
 
     @model_validator(mode="before")
     @classmethod

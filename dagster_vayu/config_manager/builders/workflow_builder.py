@@ -10,6 +10,7 @@ from ..models.workflow_model import (
     PartitionParams,
     ScheduleTrigger,
     SensorTrigger,
+    SodaCheck,
     TaskTypeUnion,
     Trigger,
     WorkflowConfig,
@@ -67,7 +68,7 @@ class WorkflowBuilder(BaseBuilder):
     def _update_consolidated_data(
         self, consolidated_data: Dict[str, List], workflow_config: Dict
     ) -> None:
-        for field_name in ["jobs", "assets", "partitions"]:
+        for field_name in WorkflowConfig.model_fields:
             if workflow_config.get(field_name):
                 consolidated_data[field_name].extend(workflow_config[field_name])
 
@@ -124,6 +125,13 @@ class WorkflowBuilder(BaseBuilder):
         Retrieves the list of partitions from all workflows.
         """
         return self._config.partitions
+
+    @property
+    def soda_checks(self) -> List[SodaCheck]:
+        """
+        Retrieves the list of soda checks from all workflows.
+        """
+        return self._config.soda_checks
 
     def get_assets_with_task_type(self, task_type: Type[TaskTypeUnion]) -> List:
         """

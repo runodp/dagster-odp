@@ -2,13 +2,19 @@ from typing import Any, Dict
 
 from dagster_gcp import GCSResource
 
-from ..resources import VayuBigQueryResource, VayuDbtResource, VayuDltResource
+from ..resources import (
+    SodaResource,
+    VayuBigQueryResource,
+    VayuDbtResource,
+    VayuDltResource,
+)
 
 RESOURCE_CLASS_MAP = {
     "dbt": VayuDbtResource,
     "bigquery": VayuBigQueryResource,
     "gcs": GCSResource,
     "dlt": VayuDltResource,
+    "soda": SodaResource,
 }
 
 
