@@ -6,23 +6,18 @@ from dagster._core.definitions.sensor_definition import DefaultSensorStatus
 from dagster_vayu.config_manager.builders.workflow_builder import WorkflowBuilder
 from dagster_vayu.config_manager.models.config_model import SensorConfig
 from dagster_vayu.config_manager.models.workflow_model import SensorTrigger
-from dagster_vayu.sensors.manager.sensor_registry import sensor_registry
 
 
 def _get_sensor_def(
     job_id: str, sensor_resource_map: Dict[str, List], spec: SensorTrigger
 ) -> SensorDefinition:
     sensor_kind = spec.params.sensor_kind
-    if sensor_kind not in sensor_registry:
-        raise ValueError(f"Sensor '{sensor_kind}' is not defined with the decorator.")
-    sensor_cls = sensor_registry[sensor_kind]
-    sensor = sensor_cls(**spec.params.sensor_params.model_dump())
     required_resources = set(sensor_resource_map[sensor_kind])
     sensor_def = SensorDefinition(
         job_name=job_id,
         name=spec.trigger_id,
         description=spec.description,
-        evaluation_fn=sensor.run,
+        evaluation_fn=spec.params.sensor_params.run,
         default_status=DefaultSensorStatus.RUNNING,
         required_resource_keys=required_resources,
     )

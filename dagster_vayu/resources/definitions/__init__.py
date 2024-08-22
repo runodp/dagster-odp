@@ -4,8 +4,8 @@ from dagster import AssetExecutionContext
 from dagster_dbt import DbtCliResource
 from dagster_gcp import BigQueryResource, GCSResource
 
-from .. import utils
 from ..resource_registry import resource_registry, vayu_resource
+from . import utils
 from .dlt_resource import VayuDltResource
 from .soda_resource import SodaResource
 
@@ -37,20 +37,24 @@ class VayuDbtResource(DbtCliResource):
 
     sources_file_path: Optional[str] = None
 
-    def update_config_params(
-        self, context: AssetExecutionContext, config: Dict
+    def update_asset_params(
+        self,
+        context: AssetExecutionContext,
+        resource_config: Dict[str, Dict],
+        asset_params: Dict,
     ) -> Dict:
         """
         Updates the configuration parameters based on the execution context.
 
         Args:
             context (AssetExecutionContext): The current asset execution context.
+            resource_config (Dict): The resource configuration.
             config (Dict): The original configuration dictionary.
 
         Returns:
             Dict
         """
-        return utils.update_config_params(context, config)
+        return utils.update_asset_params(context, resource_config, asset_params)
 
 
 resource_registry["gcs"] = GCSResource

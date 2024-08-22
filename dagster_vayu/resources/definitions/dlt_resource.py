@@ -16,7 +16,7 @@ from dlt.common.pipeline import LoadInfo
 from dagster_vayu.config_manager.models.workflow_model import DLTTask
 
 from ..resource_registry import vayu_resource
-from ..utils import update_config_params
+from .utils import update_asset_params
 
 
 @vayu_resource("dlt")
@@ -176,9 +176,28 @@ class VayuDltResource(ConfigurableResource):
             env_key = key.upper()
             os.environ[env_key] = str(value)
 
-    def run(
+    def update_asset_params(
         self,
         context: AssetExecutionContext,
+        resource_config: Dict[str, Dict],
+        asset_params: Dict,
+    ) -> Dict:
+        """
+        Updates the configuration parameters based on the execution context.
+
+        Args:
+            context (AssetExecutionContext): The current asset execution context.
+            resource_config (Dict): The resource configuration.
+            asset_params (Dict): The asset params.
+
+        Returns:
+            Dict
+        """
+        return update_asset_params(context, resource_config, asset_params)
+
+    def run(
+        self,
+        params: Dict[str, Any],
         dlt_asset: DLTTask,
         dlt_asset_names: Dict[str, List[List[str]]],
     ) -> Iterator[MaterializeResult]:
@@ -197,8 +216,6 @@ class VayuDltResource(ConfigurableResource):
         Yields:
             Iterator[MaterializeResult]
         """
-        params = update_config_params(context, dlt_asset.params.model_dump())
-
         source_module, source_func_name = dlt_asset.params.source_module.rsplit(".", 1)
         source_func = self._get_source_func(source_module, source_func_name)
 

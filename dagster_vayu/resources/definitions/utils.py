@@ -2,11 +2,12 @@ from typing import Dict
 
 from dagster import AssetExecutionContext
 
-from ..config_manager.builders import ConfigBuilder
-from ..utils import ConfigParamReplacer
+from ...utils import ConfigParamReplacer
 
 
-def update_config_params(context: AssetExecutionContext, config: Dict) -> Dict:
+def update_asset_params(
+    context: AssetExecutionContext, resource_config: Dict[str, Dict], asset_params: Dict
+) -> Dict:
     """
     Updates the configuration parameters based on the execution context.
 
@@ -16,12 +17,10 @@ def update_config_params(context: AssetExecutionContext, config: Dict) -> Dict:
 
     Args:
         context (AssetExecutionContext): The current asset execution context.
-        config (Dict): The original configuration dictionary.
+        asset_params (Dict): The asset params to be replaced.
 
     Returns:
         Dict
     """
-    config_replacer = ConfigParamReplacer(
-        context, None, ConfigBuilder().resource_config_map
-    )
-    return config_replacer.replace(config)
+    config_replacer = ConfigParamReplacer(context, None, resource_config)
+    return config_replacer.replace(asset_params)

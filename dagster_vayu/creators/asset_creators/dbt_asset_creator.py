@@ -209,7 +209,11 @@ class DBTAssetCreator(BaseAssetCreator):
     ) -> Iterator[Any]:
         dbt = context.resources.dbt
 
-        replaced_dbt_vars = dbt.update_config_params(context=context, config=dbt_vars)
+        replaced_dbt_vars = dbt.update_asset_params(
+            context=context,
+            resource_config=self._resource_config_map,
+            asset_params=dbt_vars,
+        )
 
         dbt_args = ["build", "--vars", json.dumps(replaced_dbt_vars)]
 

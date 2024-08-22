@@ -53,12 +53,12 @@ def mock_workflow_builder(mock_dbt_task):
 def mock_config_builder():
     mock_cb = Mock()
     mock_cb.get_config.return_value = Mock(
-        resources=Mock(
-            model_dump=Mock(
-                return_value={"dbt": {"project_dir": "/path/to/dbt_project"}}
-            ),
-        )
+        resources=[
+            Mock(resource_kind="dbt", params=Mock(project_dir="/path/to/dbt_project"))
+        ]
     )
+    mock_cb.resource_config_map = {"dbt": {"project_dir": "/path/to/dbt_project"}}
+    mock_cb.resource_class_map = {"dbt": Mock(project_dir="/path/to/dbt_project")}
     return mock_cb
 
 
@@ -234,8 +234,10 @@ def test_materialize_dbt_asset(mock_json_dumps, dbt_asset_creator):
     )
 
     # Assertions
-    mock_dbt.update_config_params.assert_called_once_with(
-        context=mock_context, config={"var1": "value1"}
+    mock_dbt.update_asset_params.assert_called_once_with(
+        context=mock_context,
+        resource_config=dbt_asset_creator._resource_config_map,
+        asset_params={"var1": "value1"},
     )
     mock_dbt.cli.assert_called_once_with(
         ["build", "--vars", mock_json_dumps.return_value], context=mock_context

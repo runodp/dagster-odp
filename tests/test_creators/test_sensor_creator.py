@@ -1,7 +1,7 @@
-from unittest.mock import Mock, call, patch
+from unittest.mock import Mock
 
 import pytest
-from dagster import SensorDefinition
+from dagster import SensorDefinition, SkipReason
 from dagster._core.definitions.sensor_definition import DefaultSensorStatus
 
 from dagster_vayu.config_manager.builders.workflow_builder import WorkflowBuilder
@@ -12,7 +12,6 @@ from dagster_vayu.config_manager.models.workflow_model import (
 )
 from dagster_vayu.creators.sensor_creator import _get_sensor_def, get_sensors
 from dagster_vayu.sensors.definitions.gcs_sensor import GCSSensor
-from dagster_vayu.sensors.manager.sensor_registry import sensor_registry
 
 
 @pytest.fixture
@@ -67,31 +66,21 @@ def mock_sensor_config():
 
 
 def test_get_sensors(mock_workflow_builder, mock_sensor_config):
-    mock_sensor_instance = Mock()
-    mock_sensor_instance.run = Mock()
-    mock_sensor_builder = Mock(return_value=mock_sensor_instance)
-
-    with patch.dict(sensor_registry, {"gcs_sensor": mock_sensor_builder}):
-        sensors = get_sensors(mock_workflow_builder, mock_sensor_config)
+    sensors = get_sensors(mock_workflow_builder, mock_sensor_config)
 
     assert len(sensors) == 3
     assert all(isinstance(sensor, SensorDefinition) for sensor in sensors)
 
-    expected_calls = [
-        call(bucket_name="test-bucket-1", path_prefix_filter=None),
-        call(bucket_name="test-bucket-2", path_prefix_filter="prefix/"),
-        call(bucket_name="test-bucket-3", path_prefix_filter="another/prefix/"),
-    ]
-    mock_sensor_builder.assert_has_calls(expected_calls, any_order=True)
-    assert mock_sensor_builder.call_count == 3
+    # Check that each sensor has the correct properties
+    assert sensors[0].name == "sensor1"
+    assert sensors[0].job_name == "job1"
+    assert sensors[1].name == "sensor2"
+    assert sensors[1].job_name == "job1"
+    assert sensors[2].name == "sensor3"
+    assert sensors[2].job_name == "job2"
 
-
-def test_get_sensors_undefined_sensor(mock_workflow_builder, mock_sensor_config):
-    with patch.dict(sensor_registry, {}, clear=True):
-        with pytest.raises(
-            ValueError, match="Sensor 'gcs_sensor' is not defined with the decorator."
-        ):
-            get_sensors(mock_workflow_builder, mock_sensor_config)
+    # Check that the required resource keys are set correctly
+    assert all(sensor.required_resource_keys == {"gcs"} for sensor in sensors)
 
 
 def test_get_sensors_empty(mock_workflow_builder, mock_sensor_config):
@@ -101,9 +90,8 @@ def test_get_sensors_empty(mock_workflow_builder, mock_sensor_config):
 
 
 def test_get_sensor_def():
-    mock_sensor_instance = Mock()
-    mock_sensor_instance.run = Mock()
-    mock_sensor_cls = Mock(return_value=mock_sensor_instance)
+    mock_sensor_params = Mock()
+    mock_sensor_params.run = Mock(return_value=SkipReason("No action needed"))
 
     sensor_resource_map = {"test_sensor": ["resource1", "resource2"]}
     spec = Mock(
@@ -111,12 +99,11 @@ def test_get_sensor_def():
         description="Test sensor description",
         params=Mock(
             sensor_kind="test_sensor",
-            sensor_params=Mock(model_dump=Mock(return_value={"param1": "value1"})),
+            sensor_params=mock_sensor_params,
         ),
     )
 
-    with patch.dict(sensor_registry, {"test_sensor": mock_sensor_cls}):
-        sensor_def = _get_sensor_def("test_job", sensor_resource_map, spec)
+    sensor_def = _get_sensor_def("test_job", sensor_resource_map, spec)
 
     assert isinstance(sensor_def, SensorDefinition)
     assert sensor_def.name == "test_sensor"
@@ -124,5 +111,3 @@ def test_get_sensor_def():
     assert sensor_def.description == "Test sensor description"
     assert sensor_def.default_status == DefaultSensorStatus.RUNNING
     assert sensor_def.required_resource_keys == {"resource1", "resource2"}
-
-    mock_sensor_cls.assert_called_once_with(param1="value1")

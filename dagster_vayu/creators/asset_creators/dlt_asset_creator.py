@@ -98,7 +98,13 @@ class DLTAssetCreator(BaseAssetCreator):
         def _dlt_asset_defs(
             context: AssetExecutionContext,
         ) -> Iterator[MaterializeResult]:
-            yield from context.resources.dlt.run(context, dlt_asset, dlt_asset_names)
+            dlt = context.resources.dlt
+            replaced_params = dlt.update_asset_params(
+                context, self._resource_config_map, dlt_asset.params.model_dump()
+            )
+            yield from context.resources.dlt.run(
+                replaced_params, dlt_asset, dlt_asset_names
+            )
 
         return _dlt_asset_defs
 
