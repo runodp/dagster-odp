@@ -23,7 +23,7 @@ def get_assets(dagster_resources: Dict[str, Any]) -> List[AssetsDefinition]:
     asset_list: List = []
 
     if "dbt" in dagster_resources:
-        dbt_asset_manager = DBTAssetCreator(dagster_resources["dbt"])
+        dbt_asset_manager = DBTAssetCreator()
         asset_list.extend(dbt_asset_manager.get_assets())
 
     if "dlt" in dagster_resources:

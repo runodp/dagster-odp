@@ -21,8 +21,7 @@ def update_config_params(context: AssetExecutionContext, config: Dict) -> Dict:
     Returns:
         Dict
     """
-    dagster_config = ConfigBuilder().get_config()
     config_replacer = ConfigParamReplacer(
-        context, None, dagster_config.resources.model_dump()
+        context, None, ConfigBuilder().resource_config_map
     )
     return config_replacer.replace(config)

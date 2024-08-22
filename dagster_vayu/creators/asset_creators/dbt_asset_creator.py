@@ -16,7 +16,6 @@ from dagster import (
 from dagster_dbt import DagsterDbtTranslator, DbtCliEventMessage, dbt_assets
 
 from ...config_manager.models.workflow_model import DBTParams, DBTTask
-from ...resources import VayuDbtResource
 from .base_asset_creator import BaseAssetCreator
 from .utils import generate_partition_params
 
@@ -52,7 +51,6 @@ class DBTAssetCreator(BaseAssetCreator):
 
     Attributes:
         _resources (Any): The resources configuration.
-        _dbt_resource (Any): The DBT resource configuration.
         _dbt_cli_resource (VayuDbtResource): The DBT CLI resource.
         _dbt_manifest_path (Path): The path to the DBT manifest file.
 
@@ -72,12 +70,10 @@ class DBTAssetCreator(BaseAssetCreator):
         get_assets: Retrieves or builds all DBT asset definitions for the workflow.
     """
 
-    def __init__(self, dbt_cli_resource: VayuDbtResource) -> None:
+    def __init__(self) -> None:
         super().__init__()
-        self._resources = self._dagster_config.resources
-        dbt_resource = self._resources.dbt
-        if dbt_resource:
-            self._dbt_resource = dbt_resource
+        dbt_cli_resource = self._resource_class_map.get("dbt")
+        if dbt_cli_resource:
             self._dbt_cli_resource = dbt_cli_resource
         else:
             raise ValueError("dbt resource must be configured in dagster config")
@@ -100,11 +96,11 @@ class DBTAssetCreator(BaseAssetCreator):
         Otherwise, it will use the existing manifest file in the project directory.
         """
         if os.getenv("DAGSTER_DBT_PARSE_PROJECT_ON_LOAD"):
-            if self._dbt_resource.sources_file_path_:
+            if self._dbt_cli_resource.sources_file_path:
                 self.update_dbt_sources()
             self._dbt_manifest_path = self._parse_project(Path("target"))
         else:
-            self._dbt_manifest_path = Path(self._dbt_resource.project_dir).joinpath(
+            self._dbt_manifest_path = Path(self._dbt_cli_resource.project_dir).joinpath(
                 "target", "manifest.json"
             )
 
@@ -183,12 +179,12 @@ class DBTAssetCreator(BaseAssetCreator):
             ValueError: If a source and table exist in sources.yml but
                         is not in the manifest.
         """
-        if not self._dbt_resource.sources_file_path_:
-            raise ValueError("sources_file_path_ must be configured in dagster config")
+        if not self._dbt_cli_resource.sources_file_path:
+            raise ValueError("sources_file_path must be configured in dagster config")
 
         sources_yml_path = os.path.join(
-            self._dbt_resource.project_dir,
-            self._dbt_resource.sources_file_path_,
+            self._dbt_cli_resource.project_dir,
+            self._dbt_cli_resource.sources_file_path,
         )
 
         sources_yml_data = self._read_or_create_sources_yml(sources_yml_path)

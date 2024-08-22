@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Any, Dict, Optional
 
 from ..models.config_model import DagsterConfig
 from .base_builder import BaseBuilder
@@ -38,3 +38,19 @@ class ConfigBuilder(BaseBuilder):
 
     def get_config(self) -> DagsterConfig:
         return self._config
+
+    @property
+    def resource_config_map(self) -> Dict[str, Dict]:
+        """
+        Returns a dictionary of resource configurations from the dagster config.
+        """
+
+        return {r.resource_kind: r.params.model_dump() for r in self._config.resources}
+
+    @property
+    def resource_class_map(self) -> Dict[str, Any]:
+        """
+        Returns a dictionary of resource classes from the dagster config.
+        """
+
+        return {r.resource_kind: r.params for r in self._config.resources}

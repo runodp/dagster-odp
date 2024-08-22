@@ -120,10 +120,9 @@ class DLTAssetCreator(BaseAssetCreator):
         """
         if not self._dlt_assets:
             dlt_assets = self._wb.get_assets_with_task_type(DLTTask)
-            resource_config = self._dagster_config.resources
-            if not resource_config.dlt:
+            if not self._resource_class_map.get("dlt"):
                 raise ValueError("Resource config must contain dlt resource config.")
-            dlt_path = resource_config.dlt.project_dir
+            dlt_path = self._resource_class_map["dlt"].project_dir
 
             external_assets = []
             for asset in dlt_assets:

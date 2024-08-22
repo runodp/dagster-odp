@@ -31,8 +31,11 @@ def mock_workflow_builder():
 def mock_config_builder():
     mock_cb = Mock()
     mock_cb.get_config.return_value = Mock(
-        resources=Mock(dlt=Mock(project_dir="/path/to/dlt_project"))
+        resources=[
+            Mock(resource_kind="dlt", params=Mock(project_dir="/path/to/dlt_project"))
+        ]
     )
+    mock_cb.resource_class_map = {"dlt": Mock(project_dir="/path/to/dlt_project")}
     return mock_cb
 
 
@@ -157,7 +160,6 @@ def test_get_assets(mock_build_asset, mock_external_asset_from_spec, dlt_asset_c
             ),
         )
     ]
-    dlt_asset_creator._dagster_config.resources.dlt.project_dir = "/path/to/dlt"
 
     mock_build_asset.return_value = Mock(spec=AssetsDefinition)
     mock_external_asset_from_spec.return_value = Mock(spec=AssetsDefinition)
@@ -171,3 +173,9 @@ def test_get_assets(mock_build_asset, mock_external_asset_from_spec, dlt_asset_c
     # Check that the result includes both the external asset and the built asset
     assert result[0] == mock_external_asset_from_spec.return_value
     assert result[1] == mock_build_asset.return_value
+
+    # Check that _build_asset was called with the correct dlt_path
+    mock_build_asset.assert_called_once_with(
+        dlt_asset_creator._wb.get_assets_with_task_type.return_value[0],
+        "/path/to/dlt_project",
+    )

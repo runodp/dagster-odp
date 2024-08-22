@@ -4,7 +4,10 @@ from typing import Any, Dict, List, Optional
 from dagster import ConfigurableResource
 from soda.scan import Scan
 
+from ..resource_registry import vayu_resource
 
+
+@vayu_resource("soda")
 class SodaResource(ConfigurableResource):
     """
     A resource for executing Soda scans.

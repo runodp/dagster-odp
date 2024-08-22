@@ -8,8 +8,8 @@ sensor_registry: Dict[str, Type[BaseSensor]] = {}
 T = TypeVar("T", bound=BaseSensor)
 
 
-def sensor_trigger(sensor_type: str) -> Callable[[Type[T]], Type[T]]:
-    """Decorator to register a task"""
+def vayu_sensor(sensor_type: str) -> Callable[[Type[T]], Type[T]]:
+    """Decorator to register a sensor"""
 
     def decorator(cls: Type[T]) -> Type[T]:
         if not issubclass(cls, BaseSensor):

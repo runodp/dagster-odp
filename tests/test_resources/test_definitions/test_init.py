@@ -1,4 +1,4 @@
-from dagster_vayu.resources import VayuBigQueryResource
+from dagster_vayu.resources.definitions import VayuBigQueryResource
 
 
 def test_vayu_bigquery_resource():

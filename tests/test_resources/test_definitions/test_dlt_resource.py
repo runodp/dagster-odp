@@ -7,7 +7,7 @@ from dlt.common.pipeline import LoadInfo
 from pendulum import DateTime, Timezone
 
 from dagster_vayu.config_manager.models.workflow_model import DLTParams, DLTTask
-from dagster_vayu.resources.dlt_resource import VayuDltResource
+from dagster_vayu.resources.definitions import VayuDltResource
 
 
 @pytest.fixture

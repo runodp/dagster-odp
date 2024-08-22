@@ -8,7 +8,7 @@ task_registry: Dict[str, Type[BaseTask]] = {}
 T = TypeVar("T", bound=BaseTask)
 
 
-def task(task_type: str) -> Callable[[Type[T]], Type[T]]:
+def vayu_task(task_type: str) -> Callable[[Type[T]], Type[T]]:
     """Decorator to register a task"""
 
     def decorator(cls: Type[T]) -> Type[T]:

@@ -13,10 +13,13 @@ from dagster import (
 from dlt import destinations, pipeline
 from dlt.common.pipeline import LoadInfo
 
-from ..config_manager.models.workflow_model import DLTTask
-from .utils import update_config_params
+from dagster_vayu.config_manager.models.workflow_model import DLTTask
+
+from ..resource_registry import vayu_resource
+from ..utils import update_config_params
 
 
+@vayu_resource("dlt")
 class VayuDltResource(ConfigurableResource):
     """
     A configurable resource for managing DLT (Data Loading Tool) operations.

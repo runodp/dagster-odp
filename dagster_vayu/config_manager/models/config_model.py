@@ -1,37 +1,15 @@
-# pylint: disable=C0115
-from typing import List, Optional
+# pylint: disable=C0115,C0116
+from typing import Any, List, Optional, Self
 
-from pydantic import BaseModel, BeforeValidator
+from pydantic import BaseModel, BeforeValidator, field_validator, model_validator
 from typing_extensions import Annotated
 
-
-class DbtResourceParams(BaseModel):
-    project_dir: str
-    profile: str
-    sources_file_path_: Optional[str] = None
-
-
-class DltResourceParams(BaseModel):
-    project_dir: str
-
-
-class BigQueryResourceParams(BaseModel):
-    project: str
-    location: str
-
-
-class GcsResourceParams(BaseModel):
-    project: str
-
-
-class SodaResourceParams(BaseModel):
-    project_dir: str
-    checks_dir: Optional[str] = None
+from ...resources.resource_registry import resource_registry
 
 
 def validate_resource_names(value: str) -> str:
     """resources should be defined in ResourceConfig"""
-    if value not in ResourceConfig.model_fields:
+    if value not in resource_registry:
         raise ValueError(f"Resource {value} not defined in ResourceConfig")
     return value
 
@@ -52,15 +30,24 @@ class SensorConfig(BaseModel):
     ] = []
 
 
-class ResourceConfig(BaseModel):
-    bigquery: Optional[BigQueryResourceParams] = None
-    dbt: Optional[DbtResourceParams] = None
-    gcs: Optional[GcsResourceParams] = None
-    dlt: Optional[DltResourceParams] = None
-    soda: Optional[SodaResourceParams] = None
+class GenericResource(BaseModel):
+    resource_kind: str
+    params: Any
+
+    @field_validator("resource_kind")
+    @classmethod
+    def validate_resource_kind(cls, v: str) -> str:
+        if v not in resource_registry:
+            raise ValueError(f"Resource kind {v} must be defined.")
+        return v
+
+    @model_validator(mode="after")
+    def validate_params(self) -> Self:
+        self.params = resource_registry[self.resource_kind].model_validate(self.params)
+        return self
 
 
 class DagsterConfig(BaseModel):
-    resources: ResourceConfig = ResourceConfig()
+    resources: List[GenericResource] = []
     tasks: List[TaskConfig] = []
     sensors: List[SensorConfig] = []

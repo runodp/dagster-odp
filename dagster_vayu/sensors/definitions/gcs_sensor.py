@@ -4,10 +4,10 @@ from dagster import RunRequest, SensorEvaluationContext, SkipReason
 from dagster_gcp.gcs.sensor import get_gcs_keys
 
 from ..manager.base_sensor import BaseSensor
-from ..manager.sensor_registry import sensor_trigger
+from ..manager.sensor_registry import vayu_sensor
 
 
-@sensor_trigger("gcs_sensor")
+@vayu_sensor("gcs_sensor")
 class GCSSensor(BaseSensor):
     """
     A sensor that monitors a Google Cloud Storage bucket for new objects.

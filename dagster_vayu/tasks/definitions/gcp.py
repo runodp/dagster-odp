@@ -3,11 +3,11 @@ from typing import Any, Dict
 from google.cloud import bigquery as bq
 
 from ..manager.base_task import BaseTask
-from ..manager.task_registry import task
+from ..manager.task_registry import vayu_task
 from ..utils import replace_bq_job_params
 
 
-@task(task_type="gcs_file_to_bq")
+@vayu_task(task_type="gcs_file_to_bq")
 class GCSFileToBQ(BaseTask):
     """
     A task that loads data from a Google Cloud Storage (GCS) file to a BigQuery table.
@@ -61,7 +61,7 @@ class GCSFileToBQ(BaseTask):
         return metadata
 
 
-@task(task_type="bq_table_to_gcs")
+@vayu_task(task_type="bq_table_to_gcs")
 class BQTableToGCS(BaseTask):
     """
     A task that exports data from a BigQuery table to a Google Cloud Storage (GCS) file.

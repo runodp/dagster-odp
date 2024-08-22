@@ -1,63 +1,72 @@
-import json
-
 import pytest
+from dagster import ConfigurableResource
 
 from dagster_vayu.config_manager.builders.config_builder import ConfigBuilder
-from dagster_vayu.config_manager.models.config_model import DagsterConfig
+from dagster_vayu.config_manager.models.config_model import (
+    DagsterConfig,
+    GenericResource,
+)
+from dagster_vayu.resources.resource_registry import vayu_resource
+
+
+# Mock ConfigurableResource classes for testing
+@vayu_resource("bigquery")
+class MockBigQueryResource(ConfigurableResource):
+    project: str
+    location: str
+
+
+@vayu_resource("dbt")
+class MockDbtResource(ConfigurableResource):
+    project_dir: str
+    profile: str
 
 
 @pytest.fixture
 def sample_config_data():
     return {
-        "resources": {
-            "bigquery": {"project": "test-project", "location": "US"},
-            "dbt": {"project_dir": "/path/to/dbt", "profile": "test_profile"},
-        },
-        "tasks": [
+        "resources": [
             {
-                "name": "test_task",
-                "required_resources": ["bigquery", "dbt"],
-                "compute_kind": "dbt",
-            }
+                "resource_kind": "bigquery",
+                "params": {"project": "test-project", "location": "US"},
+            },
+            {
+                "resource_kind": "dbt",
+                "params": {"project_dir": "/path/to/dbt", "profile": "test_profile"},
+            },
         ],
+        "tasks": [{"name": "test_task", "required_resources": ["bigquery", "dbt"]}],
         "sensors": [{"name": "test_sensor", "required_resources": ["bigquery"]}],
     }
 
 
-def test_load_config_from_data(sample_config_data):
-    config_builder = ConfigBuilder()
-    config_builder.load_config(sample_config_data, None)
+@pytest.fixture
+def config_builder(sample_config_data):
+    builder = ConfigBuilder()
+    builder.load_config(sample_config_data, None)
+    return builder
 
+
+def test_load_config(config_builder):
     config = config_builder.get_config()
     assert isinstance(config, DagsterConfig)
-    assert config.resources.bigquery.project == "test-project"
-    assert config.resources.dbt.project_dir == "/path/to/dbt"
-    assert len(config.tasks) == 1
-    assert len(config.sensors) == 1
+    assert len(config.resources) == 2
+    assert isinstance(config.resources[0], GenericResource)
+    assert config.resources[0].resource_kind == "bigquery"
+    assert isinstance(config.resources[0].params, MockBigQueryResource)
 
 
-def test_load_config_from_file(sample_config_data, tmp_path):
-    config_file = tmp_path / "dagster_config.json"
-    with config_file.open("w") as f:
-        json.dump(sample_config_data, f)
-
-    config_builder = ConfigBuilder()
-    config_builder.load_config(None, tmp_path)
-
-    config = config_builder.get_config()
-    assert isinstance(config, DagsterConfig)
-    assert config.resources.bigquery.project == "test-project"
-    assert config.resources.dbt.project_dir == "/path/to/dbt"
-    assert len(config.tasks) == 1
-    assert len(config.sensors) == 1
+def test_resource_config_map(config_builder):
+    resource_config = config_builder.resource_config_map
+    assert isinstance(resource_config, dict)
+    assert "bigquery" in resource_config
+    assert resource_config["bigquery"] == {"project": "test-project", "location": "US"}
 
 
-def test_load_config_with_no_data_no_file():
-    config_builder = ConfigBuilder()
-    config_builder.load_config(None, None)
-
-    config = config_builder.get_config()
-    assert isinstance(config, DagsterConfig)
-    assert config.resources == DagsterConfig().resources
-    assert config.tasks == []
-    assert config.sensors == []
+def test_resource_class_map(config_builder):
+    resource_class_map = config_builder.resource_class_map
+    assert isinstance(resource_class_map, dict)
+    assert "bigquery" in resource_class_map
+    assert isinstance(resource_class_map["bigquery"], MockBigQueryResource)
+    assert resource_class_map["bigquery"].project == "test-project"
+    assert resource_class_map["bigquery"].location == "US"

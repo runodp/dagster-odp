@@ -55,9 +55,7 @@ class GenericAssetCreator(BaseAssetCreator):
         required_resources: List,
     ) -> MaterializeResult:
         config_replacer = ConfigParamReplacer(
-            context,
-            spec.depends_on,
-            self._dagster_config.resources.model_dump(),
+            context, spec.depends_on, self._resource_config_map
         )
         params = config_replacer.replace(spec.params.model_dump())
         resource_map = {

@@ -1,12 +1,6 @@
-from typing import Any, Dict, Optional
+from typing import Dict, Optional
 
-from dagster import AssetExecutionContext, ConfigurableResource
-from dagster_dbt import DbtCliResource
-from dagster_gcp import BigQueryResource
-
-from . import utils
-from .dlt_resource import VayuDltResource
-from .soda_resource import SodaResource
+from dagster import ConfigurableResource
 
 
 class SensorContextConfig(ConfigurableResource):
@@ -23,45 +17,3 @@ class SensorContextConfig(ConfigurableResource):
     """
 
     sensor_context_config: Optional[Dict[str, str]] = {}
-
-
-class VayuBigQueryResource(BigQueryResource):
-    """
-    Custom BigQuery resource that returns the client in the ExecutionContext.
-    """
-
-    def get_object_to_set_on_execution_context(self) -> Any:
-        """
-        Returns the BigQuery client.
-
-        Returns:
-            bigquery.Client: The BigQuery client.
-        """
-        return self.get_client()
-
-
-class VayuDbtResource(DbtCliResource):
-    """
-    Custom DBT resource that extends DbtCliResource.
-
-    This resource provides additional functionality to update configuration parameters
-    based on the execution context.
-    """
-
-    def update_config_params(
-        self, context: AssetExecutionContext, config: Dict
-    ) -> Dict:
-        """
-        Updates the configuration parameters based on the execution context.
-
-        Args:
-            context (AssetExecutionContext): The current asset execution context.
-            config (Dict): The original configuration dictionary.
-
-        Returns:
-            Dict
-        """
-        return utils.update_config_params(context, config)
-
-
-__all__ = ["VayuDltResource", "SodaResource"]

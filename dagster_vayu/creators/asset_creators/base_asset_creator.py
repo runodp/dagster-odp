@@ -24,7 +24,10 @@ class BaseAssetCreator(ABC):
 
     def __init__(self) -> None:
         self._wb = WorkflowBuilder()
-        self._dagster_config = ConfigBuilder().get_config()
+        cb = ConfigBuilder()
+        self._dagster_config = cb.get_config()
+        self._resource_config_map = cb.resource_config_map
+        self._resource_class_map = cb.resource_class_map
 
     @abstractmethod
     def get_assets(self) -> List[AssetsDefinition]:

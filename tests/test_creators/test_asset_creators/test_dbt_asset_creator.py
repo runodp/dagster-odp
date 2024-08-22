@@ -54,11 +54,6 @@ def mock_config_builder():
     mock_cb = Mock()
     mock_cb.get_config.return_value = Mock(
         resources=Mock(
-            dbt=Mock(
-                project_dir="/path/to/dbt_project",
-                profile="test_profile",
-                sources_file_path_="models/sources.yml",
-            ),
             model_dump=Mock(
                 return_value={"dbt": {"project_dir": "/path/to/dbt_project"}}
             ),
@@ -69,7 +64,11 @@ def mock_config_builder():
 
 @pytest.fixture
 def mock_dbt_cli_resource():
-    return Mock()
+    return Mock(
+        project_dir="/path/to/dbt_project",
+        profile="test_profile",
+        sources_file_path="models/sources.yml",
+    )
 
 
 @pytest.fixture
@@ -85,13 +84,23 @@ def dbt_asset_creator(
             "dagster_vayu.creators.asset_creators.base_asset_creator.ConfigBuilder",
             return_value=mock_config_builder,
         ),
-        patch.object(
-            Path,
-            "joinpath",
-            return_value=Path("/path/to/dbt_project/target/manifest.json"),
+        patch(
+            "dagster_vayu.creators.asset_creators.dbt_asset_creator.Path",
+            return_value=Mock(
+                joinpath=Mock(
+                    return_value=Path("/path/to/dbt_project/target/manifest.json")
+                )
+            ),
+        ),
+        patch(
+            "dagster_vayu.creators.asset_creators.dbt_asset_creator."
+            "DBTAssetCreator._load_dbt_manifest_path"
         ),
     ):
-        return DBTAssetCreator(mock_dbt_cli_resource)
+        creator = DBTAssetCreator()
+        creator._dbt_cli_resource = mock_dbt_cli_resource
+        creator._dbt_manifest_path = Path("/path/to/dbt_project/target/manifest.json")
+        return creator
 
 
 def test_custom_dagster_dbt_translator_get_metadata():
@@ -112,10 +121,6 @@ def test_init(
 ):
     assert dbt_asset_creator._wb == mock_workflow_builder
     assert dbt_asset_creator._dagster_config == mock_config_builder.get_config()
-    assert (
-        dbt_asset_creator._dbt_resource
-        == mock_config_builder.get_config().resources.dbt
-    )
     assert dbt_asset_creator._dbt_cli_resource == mock_dbt_cli_resource
     assert dbt_asset_creator._dbt_manifest_path == Path(
         "/path/to/dbt_project/target/manifest.json"
@@ -157,7 +162,8 @@ def test_build_dbt_external_sources(mock_external_assets, dbt_asset_creator):
     }
 
     with patch(
-        "dagster_vayu.creators.asset_creators.dbt_asset_creator.DBTAssetCreator._manifest_sources",
+        "dagster_vayu.creators.asset_creators.dbt_asset_creator"
+        ".DBTAssetCreator._manifest_sources",
         new_callable=PropertyMock,
         return_value=mock_manifest_sources,
     ):
