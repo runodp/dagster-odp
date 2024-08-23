@@ -1,8 +1,7 @@
 from pathlib import Path
-from unittest.mock import Mock, PropertyMock, mock_open, patch
+from unittest.mock import Mock, patch
 
 import pytest
-import yaml
 from dagster import (
     AssetExecutionContext,
     AssetKey,
@@ -63,17 +62,31 @@ def mock_config_builder():
 
 
 @pytest.fixture
-def mock_dbt_cli_resource():
+def mock_dbt_project_manager():
     return Mock(
-        project_dir="/path/to/dbt_project",
-        profile="test_profile",
-        sources_file_path="models/sources.yml",
+        manifest_path=Path("/path/to/dbt_project/target/manifest.json"),
+        manifest_sources={
+            "source1": {
+                "name": "source1",
+                "resource_type": "source",
+                "source_name": "test_source",
+                "meta": {"dagster": {}},
+                "description": "test description",
+            },
+            "source2": {
+                "name": "source2",
+                "resource_type": "source",
+                "source_name": "test_source",
+                "meta": {"dagster": {"asset_key": ["custom", "key"]}},
+                "description": "test description",
+            },
+        },
     )
 
 
 @pytest.fixture
 def dbt_asset_creator(
-    mock_workflow_builder, mock_config_builder, mock_dbt_cli_resource
+    mock_workflow_builder, mock_config_builder, mock_dbt_project_manager
 ):
     with (
         patch(
@@ -85,22 +98,11 @@ def dbt_asset_creator(
             return_value=mock_config_builder,
         ),
         patch(
-            "dagster_vayu.creators.asset_creators.dbt_asset_creator.Path",
-            return_value=Mock(
-                joinpath=Mock(
-                    return_value=Path("/path/to/dbt_project/target/manifest.json")
-                )
-            ),
-        ),
-        patch(
-            "dagster_vayu.creators.asset_creators.dbt_asset_creator."
-            "DBTAssetCreator._load_dbt_manifest_path"
+            "dagster_vayu.creators.asset_creators.dbt_asset_creator.DBTProjectManager",
+            return_value=mock_dbt_project_manager,
         ),
     ):
-        creator = DBTAssetCreator()
-        creator._dbt_cli_resource = mock_dbt_cli_resource
-        creator._dbt_manifest_path = Path("/path/to/dbt_project/target/manifest.json")
-        return creator
+        return DBTAssetCreator()
 
 
 def test_custom_dagster_dbt_translator_get_metadata():
@@ -117,26 +119,16 @@ def test_custom_dagster_dbt_translator_get_metadata():
 
 
 def test_init(
-    dbt_asset_creator, mock_workflow_builder, mock_config_builder, mock_dbt_cli_resource
+    dbt_asset_creator,
+    mock_workflow_builder,
+    mock_config_builder,
+    mock_dbt_project_manager,
 ):
     assert dbt_asset_creator._wb == mock_workflow_builder
     assert dbt_asset_creator._dagster_config == mock_config_builder.get_config()
-    assert dbt_asset_creator._dbt_cli_resource == mock_dbt_cli_resource
-    assert dbt_asset_creator._dbt_manifest_path == Path(
-        "/path/to/dbt_project/target/manifest.json"
-    )
-
-
-@patch(
-    "builtins.open",
-    new_callable=mock_open,
-    read_data='{"sources": {"test_source": {}}}',
-)
-def test_manifest_sources(mock_file, dbt_asset_creator):
-    sources = dbt_asset_creator._manifest_sources
-    assert sources == {"test_source": {}}
-    mock_file.assert_called_once_with(
-        dbt_asset_creator._dbt_manifest_path, "r", encoding="utf-8"
+    assert dbt_asset_creator._project_manager == mock_dbt_project_manager
+    assert (
+        dbt_asset_creator._dbt_manifest_path == mock_dbt_project_manager.manifest_path
     )
 
 
@@ -144,53 +136,12 @@ def test_manifest_sources(mock_file, dbt_asset_creator):
     "dagster_vayu.creators.asset_creators.dbt_asset_creator.external_assets_from_specs"
 )
 def test_build_dbt_external_sources(mock_external_assets, dbt_asset_creator):
-    mock_manifest_sources = {
-        "source1": {
-            "name": "source1",
-            "resource_type": "source",
-            "source_name": "test_source",
-            "meta": {"dagster": {}},
-            "description": "test description",
-        },
-        "source2": {
-            "name": "source2",
-            "resource_type": "source",
-            "source_name": "test_source",
-            "meta": {"dagster": {"asset_key": ["custom", "key"]}},
-            "description": "test description",
-        },
-    }
-
-    with patch(
-        "dagster_vayu.creators.asset_creators.dbt_asset_creator"
-        ".DBTAssetCreator._manifest_sources",
-        new_callable=PropertyMock,
-        return_value=mock_manifest_sources,
-    ):
-        dbt_asset_creator.build_dbt_external_sources()
+    dbt_asset_creator.build_dbt_external_sources()
 
     mock_external_assets.assert_called_once()
     args = mock_external_assets.call_args[0][0]
     assert len(args) == 1
     assert args[0].key == AssetKey(["test_source", "source1"])
-
-
-@patch("yaml.dump")
-@patch(
-    "builtins.open",
-    new_callable=mock_open,
-    read_data=yaml.dump({"version": 2, "sources": []}),
-)
-def test_update_dbt_sources(mock_file, mock_yaml_dump, dbt_asset_creator):
-    dbt_asset_creator.update_dbt_sources()
-
-    # Assert that the file was opened for writing
-    mock_file.assert_any_call(
-        "/path/to/dbt_project/models/sources.yml", "w", encoding="utf-8"
-    )
-
-    # Assert that yaml.dump was called
-    mock_yaml_dump.assert_called_once()
 
 
 def test_get_dbt_output_metadata(dbt_asset_creator):
@@ -208,27 +159,19 @@ def test_get_dbt_output_metadata(dbt_asset_creator):
 
 @patch("dagster_vayu.creators.asset_creators.dbt_asset_creator.json.dumps")
 def test_materialize_dbt_asset(mock_json_dumps, dbt_asset_creator):
-    # Mock the context and dbt resource
     mock_context = Mock(spec=AssetExecutionContext)
     mock_dbt = Mock()
     mock_context.resources.dbt = mock_dbt
-
-    # Mock the dbt CLI invocation
     mock_cli_invocation = Mock()
     mock_dbt.cli.return_value = mock_cli_invocation
-
-    # Create a mock event and output
     mock_event = Mock(spec=DbtCliEventMessage)
     mock_output = Mock(spec=Output)
     mock_cli_invocation.stream_raw_events.return_value = [mock_event]
     mock_event.to_default_asset_events.return_value = [mock_output]
-
-    # Set up the _get_dbt_output_metadata mock
     dbt_asset_creator._get_dbt_output_metadata = Mock(
         return_value={"metadata_key": "metadata_value"}
     )
 
-    # Run the method
     result = list(
         dbt_asset_creator._materialize_dbt_asset(mock_context, {"var1": "value1"})
     )

@@ -1,10 +1,6 @@
 import json
-import os
-from functools import cached_property
-from pathlib import Path
 from typing import Any, Dict, Iterator, List, Mapping, Optional
 
-import yaml
 from dagster import (
     AssetExecutionContext,
     AssetsDefinition,
@@ -15,8 +11,9 @@ from dagster import (
 )
 from dagster_dbt import DagsterDbtTranslator, DbtCliEventMessage, dbt_assets
 
-from ...config_manager.models.workflow_model import DBTParams, DBTTask
+from ...config_manager.models.workflow_model import DBTTask
 from .base_asset_creator import BaseAssetCreator
+from .dbt_project_manager import DBTProjectManager
 from .utils import generate_partition_params
 
 
@@ -46,24 +43,16 @@ class DBTAssetCreator(BaseAssetCreator):
     """
     A concrete implementation of BaseAssetCreator for managing DBT assets.
 
-    This class is responsible for building and retrieving asset definitions
-    specifically for DBT assets.
+    This class is responsible for creating Dagster asset definitions
+    from DBT models. It uses a DBTProjectManager to handle DBT-specific operations.
 
     Attributes:
-        _resources (Any): The resources configuration.
         _dbt_cli_resource (VayuDbtResource): The DBT CLI resource.
+        _dbt_project_manager (DBTProjectManager): Manager for DBT project operations.
         _dbt_manifest_path (Path): The path to the DBT manifest file.
 
     Methods:
-        __init__: Initializes the DBTAssetCreator.
-        _parse_project: Parses the DBT project and returns the manifest path.
-        _load_dbt_manifest_path: Loads or generates the DBT manifest path.
-        _manifest_sources: Property that returns the sources from the DBT manifest.
         build_dbt_external_sources: Builds external asset definitions for DBT sources.
-        _read_or_create_sources_yml: Reads or creates a sources YAML file.
-        _update_sources_yml_data: Updates the sources YAML data.
-        update_dbt_sources: Updates the sources YAML file based on DBT assets
-                            and the manifest.
         _get_dbt_output_metadata: Extracts metadata from a DBT CLI event.
         _materialize_dbt_asset: Materializes a DBT asset.
         _build_asset: Builds a DBT asset definition.
@@ -78,37 +67,10 @@ class DBTAssetCreator(BaseAssetCreator):
         else:
             raise ValueError("dbt resource must be configured in dagster config")
 
-        self._load_dbt_manifest_path()
-
-    def _parse_project(self, target_path: Path) -> Path:
-        return (
-            self._dbt_cli_resource.cli(["--quiet", "parse"], target_path=target_path)
-            .wait()
-            .target_path.joinpath("manifest.json")
+        self._project_manager = DBTProjectManager(
+            self._dbt_cli_resource, self._wb.asset_key_dbt_params_map
         )
-
-    def _load_dbt_manifest_path(self) -> None:
-        """
-        Loads or generates the DBT manifest path.
-
-        If the DAGSTER_DBT_PARSE_PROJECT_ON_LOAD environment variable is set,
-        this method will parse the DBT project and generate a new manifest.
-        Otherwise, it will use the existing manifest file in the project directory.
-        """
-        if os.getenv("DAGSTER_DBT_PARSE_PROJECT_ON_LOAD"):
-            if self._dbt_cli_resource.sources_file_path:
-                self.update_dbt_sources()
-            self._dbt_manifest_path = self._parse_project(Path("target"))
-        else:
-            self._dbt_manifest_path = Path(self._dbt_cli_resource.project_dir).joinpath(
-                "target", "manifest.json"
-            )
-
-    @cached_property
-    def _manifest_sources(self) -> Dict[str, Any]:
-        with open(self._dbt_manifest_path, "r", encoding="utf-8") as file:
-            manifest = json.load(file)
-        return manifest.get("sources", {})
+        self._dbt_manifest_path = self._project_manager.manifest_path
 
     def build_dbt_external_sources(self) -> List[AssetsDefinition]:
         """
@@ -124,79 +86,12 @@ class DBTAssetCreator(BaseAssetCreator):
                 group_name=dagster_dbt_translator.get_group_name(dbt_resource_props),
                 description=dagster_dbt_translator.get_description(dbt_resource_props),
             )
-            for dbt_resource_props in self._manifest_sources.values()
+            for dbt_resource_props in self._project_manager.manifest_sources.values()
             if not dbt_resource_props.get("meta", {})
             .get("dagster", {})
             .get("asset_key")
         ]
         return external_assets_from_specs(asset_defs)
-
-    def _read_or_create_sources_yml(self, sources_yml_path: str) -> Dict[str, Any]:
-        if os.path.exists(sources_yml_path):
-            with open(sources_yml_path, "r", encoding="utf-8") as file:
-                return yaml.safe_load(file) or {"version": 2, "sources": []}
-        return {"version": 2, "sources": []}
-
-    def _update_sources_yml_data(
-        self, sources_yml_data: Dict[str, Any], dbt_asset_defs: Dict[str, DBTParams]
-    ) -> Dict[str, Any]:
-        for asset_key, dbt_params in dbt_asset_defs.items():
-            source_name = dbt_params.source_name
-            table_name = dbt_params.table_name
-
-            table = {
-                "name": table_name,
-                "meta": {"dagster": {"asset_key": [asset_key]}},
-            }
-            existing_source = next(
-                (s for s in sources_yml_data["sources"] if s["name"] == source_name),
-                None,
-            )
-            if existing_source:
-                existing_table = next(
-                    (t for t in existing_source["tables"] if t["name"] == table_name),
-                    None,
-                )
-                if existing_table:
-                    continue
-
-                existing_source["tables"].append(table)
-            else:
-                sources_yml_data["sources"].append(
-                    {"name": source_name, "tables": [table]}
-                )
-        return sources_yml_data
-
-    def update_dbt_sources(self) -> None:
-        """
-        Update the sources.yml file based on the DBT assets and manifest.
-
-        This method compares the sources in the manifest with the DBT assets
-        and updates the sources.yml file accordingly. It raises an error if
-        there's a discrepancy between the sources.yml and the manifest.
-
-        Raises:
-            ValueError: If a source and table exist in sources.yml but
-                        is not in the manifest.
-        """
-        if not self._dbt_cli_resource.sources_file_path:
-            raise ValueError("sources_file_path must be configured in dagster config")
-
-        sources_yml_path = os.path.join(
-            self._dbt_cli_resource.project_dir,
-            self._dbt_cli_resource.sources_file_path,
-        )
-
-        sources_yml_data = self._read_or_create_sources_yml(sources_yml_path)
-        dbt_asset_defs = self._wb.asset_key_dbt_params_map
-
-        sources_yml_data = self._update_sources_yml_data(
-            sources_yml_data, dbt_asset_defs
-        )
-
-        with open(sources_yml_path, "w", encoding="utf-8") as file:
-            yaml.dump(sources_yml_data, file, sort_keys=False)
-        print(f"YAML file updated successfully at {sources_yml_path}")
 
     def _get_dbt_output_metadata(self, event: DbtCliEventMessage) -> Dict:
         dest_info = event.raw_event["data"]["node_info"]["node_relation"]
@@ -243,7 +138,6 @@ class DBTAssetCreator(BaseAssetCreator):
         exclude: Optional[str] = None,
         partition_params: Optional[Dict] = None,
     ) -> AssetsDefinition:
-
         partitions_def = (
             TimeWindowPartitionsDefinition(**partition_params)
             if partition_params
