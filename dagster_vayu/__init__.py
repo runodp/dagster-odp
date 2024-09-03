@@ -7,7 +7,7 @@ from .creators import get_asset_checks, get_assets, get_jobs, get_schedules, get
 from .resources import SensorContextConfig
 from .resources.definitions import *  # noqa
 from .sensors.definitions.gcs_sensor import *  # noqa
-from .tasks.definitions.gcp import *  # noqa
+from .tasks.definitions import *  # noqa
 
 
 def build_definitions(config_path: Optional[str] = None) -> Definitions:

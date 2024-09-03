@@ -7,6 +7,7 @@ from dagster_gcp import BigQueryResource, GCSResource
 from ..resource_registry import resource_registry, vayu_resource
 from . import utils
 from .dlt_resource import VayuDltResource
+from .duckdb_resource import DuckDbResource
 from .soda_resource import SodaResource
 
 
@@ -59,4 +60,10 @@ class VayuDbtResource(DbtCliResource):
 
 resource_registry["gcs"] = GCSResource
 
-__all__ = ["VayuDltResource", "SodaResource", "VayuBigQueryResource", "VayuDbtResource"]
+__all__ = [
+    "VayuDltResource",
+    "SodaResource",
+    "VayuBigQueryResource",
+    "VayuDbtResource",
+    "DuckDbResource",
+]
