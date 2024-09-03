@@ -2,8 +2,7 @@ from typing import Any, Dict
 
 from google.cloud import bigquery as bq
 
-from ..manager.base_task import BaseTask
-from ..manager.task_registry import vayu_task
+from ..manager import BaseTask, vayu_task
 from ..utils import replace_bq_job_params
 
 

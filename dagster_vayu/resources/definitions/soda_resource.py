@@ -60,6 +60,10 @@ class SodaResource(ConfigurableResource):
                     "result": check.get_log_diagnostic_dict(),
                 }
             )
+
+        if not scan_results:
+            raise ValueError("No soda scan results found, check your configuration")
+
         return scan_results
 
     def run(self, data_source: str, check_file_path: str) -> List[Dict[str, Any]]:

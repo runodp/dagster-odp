@@ -2,6 +2,8 @@ from typing import Dict, Optional
 
 from dagster import ConfigurableResource
 
+from .resource_registry import vayu_resource
+
 
 class SensorContextConfig(ConfigurableResource):
     """
@@ -17,3 +19,6 @@ class SensorContextConfig(ConfigurableResource):
     """
 
     sensor_context_config: Optional[Dict[str, str]] = {}
+
+
+__all__ = ["vayu_resource"]

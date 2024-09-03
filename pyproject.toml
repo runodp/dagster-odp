@@ -23,6 +23,12 @@ dependencies = [
     "dagster-dbt",
     "dagster-embedded-elt",
     "dlt[bigquery]",
+    "duckdb",
+    "fsspec",
+    "gcsfs",
+    "soda-core",
+    "soda-core-bigquery",
+    "soda-core-duckdb"
 ]
 
 [project.optional-dependencies]
