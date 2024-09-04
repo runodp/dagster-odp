@@ -132,16 +132,41 @@ def test_init(
     )
 
 
+@pytest.mark.parametrize(
+    "external_value, should_include",
+    [
+        (True, True),
+        ("true", True),
+        (False, False),
+        (None, False),
+    ],
+)
 @patch(
     "dagster_vayu.creators.asset_creators.dbt_asset_creator.external_assets_from_specs"
 )
-def test_build_dbt_external_sources(mock_external_assets, dbt_asset_creator):
+def test_build_dbt_external_sources(
+    mock_external_assets, external_value, should_include, dbt_asset_creator
+):
+    dbt_asset_creator._project_manager.manifest_sources = {
+        "source1": {
+            "name": "source1",
+            "resource_type": "source",
+            "source_name": "test_source",
+            "meta": {"dagster": {"external": external_value}},
+            "description": "test description",
+        },
+    }
+
     dbt_asset_creator.build_dbt_external_sources()
 
     mock_external_assets.assert_called_once()
     args = mock_external_assets.call_args[0][0]
-    assert len(args) == 1
-    assert args[0].key == AssetKey(["test_source", "source1"])
+
+    if should_include:
+        assert len(args) == 1
+        assert args[0].key == AssetKey(["test_source", "source1"])
+    else:
+        assert len(args) == 0
 
 
 def test_get_dbt_output_metadata(dbt_asset_creator):

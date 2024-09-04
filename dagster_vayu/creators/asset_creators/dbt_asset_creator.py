@@ -1,6 +1,8 @@
 import json
 from typing import Any, Dict, Iterator, List, Mapping, Optional
 
+from dagster_dbt import DagsterDbtTranslator, DbtCliEventMessage, dbt_assets
+
 from dagster import (
     AssetExecutionContext,
     AssetsDefinition,
@@ -9,7 +11,6 @@ from dagster import (
     TimeWindowPartitionsDefinition,
     external_assets_from_specs,
 )
-from dagster_dbt import DagsterDbtTranslator, DbtCliEventMessage, dbt_assets
 
 from ...config_manager.models.workflow_model import DBTTask
 from .base_asset_creator import BaseAssetCreator
@@ -87,9 +88,8 @@ class DBTAssetCreator(BaseAssetCreator):
                 description=dagster_dbt_translator.get_description(dbt_resource_props),
             )
             for dbt_resource_props in self._project_manager.manifest_sources.values()
-            if not dbt_resource_props.get("meta", {})
-            .get("dagster", {})
-            .get("asset_key")
+            if dbt_resource_props.get("meta", {}).get("dagster", {}).get("external")
+            in (True, "true", "True", "TRUE")
         ]
         return external_assets_from_specs(asset_defs)
 
