@@ -28,7 +28,8 @@ dependencies = [
     "gcsfs",
     "soda-core",
     "soda-core-bigquery",
-    "soda-core-duckdb"
+    "soda-core-duckdb",
+    "dbt-duckdb"
 ]
 
 [project.optional-dependencies]

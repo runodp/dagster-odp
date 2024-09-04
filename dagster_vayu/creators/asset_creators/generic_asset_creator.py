@@ -113,6 +113,12 @@ class GenericAssetCreator(BaseAssetCreator):
             else None
         )
 
+        tags = (
+            {"dagster/storage_kind": task_config.storage_kind}
+            if task_config and task_config.storage_kind
+            else None
+        )
+
         @asset(
             name=name,
             key_prefix=key_prefix,
@@ -127,6 +133,7 @@ class GenericAssetCreator(BaseAssetCreator):
                 if partition_params
                 else None
             ),
+            tags=tags,
         )
         def _asset_def(context: AssetExecutionContext) -> MaterializeResult:
             return self._materialize_asset(context, spec, required_resources)
