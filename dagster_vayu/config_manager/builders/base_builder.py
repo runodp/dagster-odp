@@ -20,7 +20,7 @@ class BaseBuilder(ABC):
         get_config: Abstract method to retrieve the loaded configuration.
     """
 
-    _instance = None
+    _instance: Self | None = None
 
     def __new__(cls, *args: Any, **kwargs: Any) -> Self:
         if cls._instance is None:

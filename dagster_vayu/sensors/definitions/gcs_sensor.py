@@ -1,4 +1,4 @@
-from typing import Iterator, Optional
+from typing import Any, Generator, Optional
 
 from dagster import RunRequest, SensorEvaluationContext, SkipReason
 from dagster_gcp.gcs.sensor import get_gcs_keys
@@ -31,7 +31,7 @@ class GCSSensor(BaseSensor):
 
     def run(
         self, context: SensorEvaluationContext
-    ) -> Iterator[SkipReason | RunRequest]:
+    ) -> Generator[RunRequest, Any, SkipReason | None]:
         client = context.resources.gcs
         since_key = context.cursor or None
         new_gcs_objects = get_gcs_keys(

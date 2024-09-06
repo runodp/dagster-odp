@@ -1,9 +1,8 @@
 from unittest.mock import Mock, patch
 
 import pytest
-from google.cloud import bigquery as bq
-
 from dagster_vayu.tasks.definitions.gcp_tasks import BQTableToGCS, GCSFileToBQ
+from google.cloud import bigquery as bq
 
 
 @pytest.fixture
@@ -68,7 +67,7 @@ def test_gcs_file_to_bq(mock_bigquery, mock_job, mock_table):
     assert result == {
         "source_file_uri": source_file_uri,
         "destination_table_id": destination_table_id,
-        "rows_loaded": mock_table.num_rows,
+        "row_count": mock_table.num_rows,
     }
 
 
@@ -105,5 +104,5 @@ def test_bq_table_to_gcs(mock_bigquery, mock_job, mock_table):
     assert result == {
         "source_table_id": source_table_id,
         "destination_file_uri": "gs://test-bucket/output",
-        "rows_loaded": mock_table.num_rows,
+        "row_count": mock_table.num_rows,
     }

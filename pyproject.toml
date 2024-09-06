@@ -21,7 +21,6 @@ dependencies = [
     "dbt-core",
     "dbt-bigquery",
     "dagster-dbt",
-    "dagster-embedded-elt",
     "dlt[bigquery]",
     "duckdb",
     "fsspec",

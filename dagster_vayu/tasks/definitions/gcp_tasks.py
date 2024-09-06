@@ -55,7 +55,7 @@ class GCSFileToBQ(BaseTask):
             metadata = {
                 "source_file_uri": self.source_file_uri,
                 "destination_table_id": self.destination_table_id,
-                "rows_loaded": destination_table.num_rows,
+                "row_count": destination_table.num_rows,
             }
         return metadata
 
@@ -110,7 +110,7 @@ class BQTableToGCS(BaseTask):
                 "destination_file_uri": extract_job.destination_uris[0].rsplit("/", 1)[
                     0
                 ],
-                "rows_loaded": source_table.num_rows,  # type: ignore
+                "row_count": source_table.num_rows,  # type: ignore
             }
 
         return metadata
