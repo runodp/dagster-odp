@@ -89,7 +89,7 @@ class DuckDbQuery(BaseTask):
             }
 
 
-@vayu_task("duckdb_to_file")
+@vayu_task("duckdb_table_to_file")
 class DuckDbTableToFile(BaseTask):
     """
     A task that writes a DuckDB table to a file.

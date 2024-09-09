@@ -8,7 +8,6 @@ from dagster_vayu.config_manager.models.workflow_model import (
     DLTTask,
     GenericTask,
     WorkflowConfig,
-    WorkflowJob,
 )
 
 SAMPLE_WORKFLOW_CONFIG = {
@@ -174,24 +173,3 @@ def test_consolidate_workflow_data(tmp_path):
     assert set(
         partition["params"]["schedule_type"] for partition in result["partitions"]
     ) == {"MONTHLY", "DAILY"}
-
-
-def test_update_consolidated_data(workflow_builder):
-    consolidated_data = {"jobs": [], "assets": [], "partitions": []}
-    workflow_builder._update_consolidated_data(
-        consolidated_data, workflow_builder._config.model_dump()
-    )
-    assert len(consolidated_data["jobs"]) == 1
-    assert len(consolidated_data["assets"]) == 3
-    assert len(consolidated_data["partitions"]) == 1
-
-    new_config = WorkflowConfig(
-        jobs=[WorkflowJob(job_id="new_job", triggers=[], asset_selection=set())],
-        assets=[],
-        partitions=[],
-    )
-    workflow_builder._update_consolidated_data(
-        consolidated_data, new_config.model_dump()
-    )
-    assert len(consolidated_data["jobs"]) == 2
-    assert any(job["job_id"] == "new_job" for job in consolidated_data["jobs"])

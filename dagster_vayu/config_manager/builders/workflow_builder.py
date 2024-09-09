@@ -55,22 +55,13 @@ class WorkflowBuilder(BaseBuilder):
         return self._config
 
     def _consolidate_workflow_data(self, workflow_dir: Path) -> Dict:
-        consolidated_data: Dict[str, List] = defaultdict(list)
+        merged_data = WorkflowConfig().model_dump()
         for file_path in workflow_dir.glob("*.json"):
             with file_path.open("r", encoding="utf-8") as file:
                 data = json.load(file)
-            workflow_config = WorkflowConfig.model_validate(data)
-            self._update_consolidated_data(
-                consolidated_data, workflow_config.model_dump()
-            )
-        return consolidated_data
-
-    def _update_consolidated_data(
-        self, consolidated_data: Dict[str, List], workflow_config: Dict
-    ) -> None:
-        for field_name in WorkflowConfig.model_fields:
-            if workflow_config.get(field_name):
-                consolidated_data[field_name].extend(workflow_config[field_name])
+                workflow_config = WorkflowConfig.model_validate(data)
+                self._merge_configs(merged_data, workflow_config.model_dump())
+        return merged_data
 
     @property
     def triggers(self) -> List[Dict[str, List[Trigger]]]:

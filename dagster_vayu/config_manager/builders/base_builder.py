@@ -30,11 +30,13 @@ class BaseBuilder(ABC):
     def __init__(
         self, config_data: Optional[Dict] = None, config_path: Optional[str] = None
     ) -> None:
-        if config_path:
-            path_obj = Path(config_path).resolve()
-        else:
-            path_obj = Path(os.environ.get("VAYU_CONFIG_PATH", "")).resolve()
-        self.load_config(config_data, path_obj)
+        if not hasattr(self, "_config_loaded"):
+            if config_path:
+                path_obj = Path(config_path).resolve()
+            else:
+                path_obj = Path(os.environ.get("VAYU_CONFIG_PATH", "")).resolve()
+            self.load_config(config_data, path_obj)
+            self._config_loaded = True
 
     @abstractmethod
     def load_config(
@@ -45,3 +47,18 @@ class BaseBuilder(ABC):
     @abstractmethod
     def get_config(self) -> Any:
         """Return the loaded configuration."""
+
+    def _merge_configs(
+        self, merged_config: Dict[str, Any], new_config: Dict[str, Any]
+    ) -> None:
+        """
+        Merge new_config into merged_config, merging all fields recursively.
+        We can assume all keys in new_config are in merged_config.
+        """
+        for key, value in new_config.items():
+            if isinstance(value, list):
+                merged_config[key].extend(value)
+            elif isinstance(value, dict):
+                self._merge_configs(merged_config[key], value)
+            else:
+                merged_config[key] = value

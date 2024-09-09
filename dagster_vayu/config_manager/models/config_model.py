@@ -51,3 +51,26 @@ class DagsterConfig(BaseModel):
     resources: List[GenericResource] = []
     tasks: List[TaskConfig] = []
     sensors: List[SensorConfig] = []
+
+    @model_validator(mode="after")
+    def validate_unique_names(self) -> Self:
+        task_names = set()
+        sensor_names = set()
+        resource_kinds = set()
+
+        for task in self.tasks:
+            if task.name in task_names:
+                raise ValueError(f"Duplicate task name: {task.name}")
+            task_names.add(task.name)
+
+        for sensor in self.sensors:
+            if sensor.name in sensor_names:
+                raise ValueError(f"Duplicate sensor name: {sensor.name}")
+            sensor_names.add(sensor.name)
+
+        for resource in self.resources:
+            if resource.resource_kind in resource_kinds:
+                raise ValueError(f"Duplicate resource kind: {resource.resource_kind}")
+            resource_kinds.add(resource.resource_kind)
+
+        return self
