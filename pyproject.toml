@@ -28,7 +28,8 @@ dependencies = [
     "soda-core",
     "soda-core-bigquery",
     "soda-core-duckdb",
-    "dbt-duckdb"
+    "dbt-duckdb",
+    "chevron"
 ]
 
 [project.optional-dependencies]

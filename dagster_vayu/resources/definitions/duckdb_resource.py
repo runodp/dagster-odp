@@ -38,10 +38,13 @@ class DuckDbResource(ConfigurableResource, IAttachDifferentObjectToOpContext):
         Yields:
             duckdb.DuckDBPyConnection: A connection to the DuckDB database.
         """
-        if not Path(self.database_path).is_file():
-            raise ValueError(f"Invalid path: {self.database_path}")
+        path = Path(self.database_path)
+        if not path.parent.exists():
+            raise ValueError(
+                f"Invalid path: {self.database_path}. Directory does not exist."
+            )
 
-        yield duckdb.connect(self.database_path)
+        yield duckdb.connect(str(path))
 
     def get_object_to_set_on_execution_context(self) -> Any:
         return self.get_connection()

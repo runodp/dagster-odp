@@ -83,10 +83,13 @@ class DuckDbQuery(BaseTask):
             # Execute the query
             result = con.sql(query)
 
-            return {
-                "row_count": result.shape[0],
-                "column_names": result.columns,
-            }
+            metadata = (
+                {"row_count": result.shape[0], "column_names": result.columns}
+                if result
+                else {}
+            )
+
+            return metadata
 
 
 @vayu_task("duckdb_table_to_file")
