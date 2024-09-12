@@ -28,11 +28,10 @@ def build_definitions(config_path: Optional[str] = None) -> Definitions:
 
     wb = WorkflowBuilder(config_path=config_path)
     cb = ConfigBuilder(config_path=config_path)
-    dagster_config = cb.get_config()
 
     resources = cb.resource_class_map
     job_defs = get_jobs(wb)
-    sensor_defs = get_sensors(wb, dagster_config.sensors)
+    sensor_defs = get_sensors(wb)
     schedule_defs = get_schedules(wb, job_defs)
     asset_check_defs = get_asset_checks(wb)
 

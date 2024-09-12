@@ -5,8 +5,6 @@ import pytest
 from dagster_vayu.config_manager.models.config_model import (
     DagsterConfig,
     GenericResource,
-    SensorConfig,
-    TaskConfig,
     validate_resource_names,
 )
 
@@ -48,16 +46,6 @@ def test_validate_unique_names(mock_resource_registry):
         mock_resource_registry,
         clear=True,
     ):
-
-        # Test duplicate task names
-        with pytest.raises(ValueError, match="Duplicate task name: task1"):
-            DagsterConfig(tasks=[TaskConfig(name="task1"), TaskConfig(name="task1")])
-
-        # Test duplicate sensor names
-        with pytest.raises(ValueError, match="Duplicate sensor name: sensor1"):
-            DagsterConfig(
-                sensors=[SensorConfig(name="sensor1"), SensorConfig(name="sensor1")]
-            )
 
         # Test duplicate resource kinds
         with pytest.raises(ValueError, match="Duplicate resource kind: resource1"):

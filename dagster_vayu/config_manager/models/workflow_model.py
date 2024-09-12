@@ -83,7 +83,7 @@ class GenericSensor(BaseModel):
 
     @model_validator(mode="after")
     def validate_params(self) -> Self:
-        self.sensor_params = sensor_registry[self.sensor_kind].model_validate(
+        self.sensor_params = sensor_registry[self.sensor_kind]["class"].model_validate(
             self.sensor_params
         )
         return self

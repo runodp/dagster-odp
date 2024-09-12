@@ -7,7 +7,7 @@ from ..manager.base_sensor import BaseSensor
 from ..manager.sensor_registry import vayu_sensor
 
 
-@vayu_sensor("gcs_sensor")
+@vayu_sensor(sensor_type="gcs_sensor", required_resources=["gcs"])
 class GCSSensor(BaseSensor):
     """
     A sensor that monitors a Google Cloud Storage bucket for new objects.
