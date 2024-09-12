@@ -95,14 +95,22 @@ def generic_asset_creator(mock_workflow_builder, mock_config_builder, task_regis
         yield GenericAssetCreator()
 
 
+@patch(
+    "dagster_vayu.creators.asset_creators.generic_asset_creator.AssetExecutionContext"
+)
 def test_init_and_execute(
-    generic_asset_creator, mock_workflow_builder, mock_config_builder
+    mock_asset_execution_context,
+    generic_asset_creator,
+    mock_workflow_builder,
+    mock_config_builder,
 ):
     assert generic_asset_creator._wb == mock_workflow_builder
     assert generic_asset_creator._dagster_config == mock_config_builder.get_config()
 
+    mock_context = mock_asset_execution_context.return_value
+
     result = generic_asset_creator._execute_task_function(
-        "custom_task", {"param1": "value1"}, {"resource1": "value1"}
+        "custom_task", {"param1": "value1"}, ["resource1"], mock_context
     )
     assert result == {"result": "Executed with value1"}
 

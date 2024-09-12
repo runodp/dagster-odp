@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
+from dagster import AssetExecutionContext
 from pydantic import BaseModel, PrivateAttr
 
 
@@ -14,18 +15,31 @@ class BaseTask(ABC, BaseModel):
     Attributes:
         _resources (Optional[Dict[str, Any]]): Private attribute to store
             resources needed by the task.
+        _context (AssetExecutionContext): Private attribute to store the context.
     """
 
     _resources: Optional[Dict[str, Any]] = PrivateAttr(default=None)
+    _context: AssetExecutionContext = PrivateAttr()
 
-    def set_resources(self, resources: Dict[str, Any]) -> None:
+    def initialize(
+        self, context: AssetExecutionContext, required_resources: List
+    ) -> None:
         """
-        Set the resources for the task.
+        Initialize the task with the execution context and required resources.
 
         Args:
-            resources (Dict[str, Any]): Resources to be used by the task.
+            context (AssetExecutionContext): The execution context for the task.
+            required_resources (List[str]): Resources required by this task.
+
+        Returns:
+            None
         """
-        self._resources = resources
+        self._context = context
+        resource_map = {
+            resource: getattr(context.resources, resource)
+            for resource in required_resources
+        }
+        self._resources = resource_map
 
     @abstractmethod
     def run(self) -> Dict:

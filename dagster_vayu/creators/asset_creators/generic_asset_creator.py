@@ -41,11 +41,15 @@ class GenericAssetCreator(BaseAssetCreator):
         self._assets: List[AssetsDefinition] = []
 
     def _execute_task_function(
-        self, task_type: str, params: Dict, resource_map: Dict
+        self,
+        task_type: str,
+        params: Dict,
+        required_resources: List,
+        context: AssetExecutionContext,
     ) -> Dict:
         cls = task_registry[task_type]
         task = cls(**params)
-        task.set_resources(resource_map)
+        task.initialize(context, required_resources)
         return task.run()
 
     def _materialize_asset(
@@ -58,12 +62,10 @@ class GenericAssetCreator(BaseAssetCreator):
             context, spec.depends_on, self._resource_config_map
         )
         params = config_replacer.replace(spec.params.model_dump())
-        resource_map = {
-            resource: getattr(context.resources, resource)
-            for resource in required_resources
-        }
-        metadata = self._execute_task_function(spec.task_type, params, resource_map)
 
+        metadata = self._execute_task_function(
+            spec.task_type, params, required_resources, context
+        )
         return MaterializeResult(metadata=metadata)
 
     def _get_asset_key_split(self, asset_key: str) -> Tuple[str, Optional[List[str]]]:
