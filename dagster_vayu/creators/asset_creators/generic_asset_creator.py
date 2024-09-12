@@ -44,28 +44,24 @@ class GenericAssetCreator(BaseAssetCreator):
         self,
         task_type: str,
         params: Dict,
-        required_resources: List,
         context: AssetExecutionContext,
     ) -> Dict:
-        cls = task_registry[task_type]
+        cls = task_registry[task_type]["class"]
         task = cls(**params)
-        task.initialize(context, required_resources)
+        task.initialize(context)
         return task.run()
 
     def _materialize_asset(
         self,
         context: AssetExecutionContext,
         spec: TaskTypeUnion,
-        required_resources: List,
     ) -> MaterializeResult:
         config_replacer = ConfigParamReplacer(
             context, spec.depends_on, self._resource_config_map
         )
         params = config_replacer.replace(spec.params.model_dump())
 
-        metadata = self._execute_task_function(
-            spec.task_type, params, required_resources, context
-        )
+        metadata = self._execute_task_function(spec.task_type, params, context)
         return MaterializeResult(metadata=metadata)
 
     def _get_asset_key_split(self, asset_key: str) -> Tuple[str, Optional[List[str]]]:
@@ -88,13 +84,9 @@ class GenericAssetCreator(BaseAssetCreator):
         Returns:
             AssetsDefinition
         """
-        task_type = spec.task_type
-        task_config = next(
-            (task for task in self._dagster_config.tasks if task.name == task_type),
-            None,
-        )
+        task_config = task_registry[spec.task_type]
 
-        required_resources = task_config.required_resources if task_config else []
+        required_resources = task_config["required_resources"]
         required_resource_keys = {*required_resources, "sensor_context"}
 
         name, key_prefix = self._get_asset_key_split(spec.asset_key)
@@ -116,9 +108,9 @@ class GenericAssetCreator(BaseAssetCreator):
         )
 
         tags = (
-            {"dagster/storage_kind": task_config.storage_kind}
-            if task_config and task_config.storage_kind
-            else None
+            {"dagster/storage_kind": task_config["storage_kind"]}
+            if task_config["storage_kind"]
+            else {}
         )
 
         @asset(
@@ -129,7 +121,7 @@ class GenericAssetCreator(BaseAssetCreator):
             deps=deps,
             metadata=spec.params.model_dump(),
             group_name=spec.group_name,
-            compute_kind=task_config.compute_kind if task_config else None,
+            compute_kind=task_config["compute_kind"],
             partitions_def=(
                 TimeWindowPartitionsDefinition(**partition_params)
                 if partition_params
@@ -138,7 +130,7 @@ class GenericAssetCreator(BaseAssetCreator):
             tags=tags,
         )
         def _asset_def(context: AssetExecutionContext) -> MaterializeResult:
-            return self._materialize_asset(context, spec, required_resources)
+            return self._materialize_asset(context, spec)
 
         return _asset_def
 

@@ -19,24 +19,22 @@ class ConfigBuilder(BaseBuilder):
     def load_config(
         self, config_data: Optional[Dict], config_path: Optional[Path]
     ) -> None:
-
-        # Start with the provided config_data as the base configuration
-        merged_config = DagsterConfig().model_dump()
-
         if config_data:
-            # Merge config_data with the empty configuration
-            self._merge_configs(merged_config, config_data)
+            self._config = DagsterConfig(**config_data)
+            return
 
-        if config_path:
-            resources_file = config_path / "dagster_config.json"
-            if resources_file.exists():
-                with resources_file.open("r", encoding="utf-8") as file:
-                    file_config = json.load(file)
-                    # Merge file_config with the already merged configuration
-                    self._merge_configs(merged_config, file_config)
+        if config_path is None:
+            self._config = DagsterConfig()
+            return
 
-        # Create the DagsterConfig object with the final merged configuration
-        self._config = DagsterConfig(**merged_config)
+        resources_file = config_path / "dagster_config.json"
+        if not resources_file.exists():
+            self._config = DagsterConfig()
+            return
+
+        with resources_file.open("r", encoding="utf-8") as file:
+            data = json.load(file)
+            self._config = DagsterConfig(**data)
 
     def get_config(self) -> DagsterConfig:
         return self._config

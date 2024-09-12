@@ -6,7 +6,12 @@ from fsspec import filesystem
 from dagster_vayu.tasks.manager import BaseTask, vayu_task
 
 
-@vayu_task("file_to_duckdb")
+@vayu_task(
+    "file_to_duckdb",
+    required_resources=["duckdb"],
+    compute_kind="duckdb",
+    storage_kind="duckdb",
+)
 class FileToDuckDb(BaseTask):
     """
     A task that loads data from a file (e.g., Parquet) into a DuckDB table.
@@ -22,9 +27,6 @@ class FileToDuckDb(BaseTask):
     source_file_uri: str
 
     def run(self) -> Dict[str, Any]:
-        if not self._resources or "duckdb" not in self._resources:
-            raise ValueError("required 'duckdb' resource not passed to the asset")
-
         duckdb_connection = self._resources["duckdb"]
 
         # Connect to the DuckDB database
@@ -46,7 +48,7 @@ class FileToDuckDb(BaseTask):
             }
 
 
-@vayu_task("duckdb_query")
+@vayu_task("duckdb_query", required_resources=["duckdb"], compute_kind="duckdb")
 class DuckDbQuery(BaseTask):
     """
     A task that executes a SQL query on a DuckDB database.
@@ -63,9 +65,6 @@ class DuckDbQuery(BaseTask):
     is_file: bool = False
 
     def run(self) -> Dict[str, Any]:
-        if not self._resources or "duckdb" not in self._resources:
-            raise ValueError("Required 'duckdb' resource not passed to the asset")
-
         duckdb_connection = self._resources["duckdb"]
 
         # Connect to the DuckDB database
@@ -92,7 +91,7 @@ class DuckDbQuery(BaseTask):
             return metadata
 
 
-@vayu_task("duckdb_table_to_file")
+@vayu_task("duckdb_table_to_file", required_resources=["duckdb"], compute_kind="duckdb")
 class DuckDbTableToFile(BaseTask):
     """
     A task that writes a DuckDB table to a file.
@@ -107,9 +106,6 @@ class DuckDbTableToFile(BaseTask):
     destination_file_uri: str
 
     def run(self) -> Dict[str, Any]:
-        if not self._resources or "duckdb" not in self._resources:
-            raise ValueError("Required 'duckdb' resource not passed to the asset")
-
         duckdb_connection = self._resources["duckdb"]
 
         # Connect to the DuckDB database

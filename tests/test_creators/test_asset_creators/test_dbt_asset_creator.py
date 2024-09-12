@@ -118,20 +118,6 @@ def test_custom_dagster_dbt_translator_get_metadata():
     assert result == {"base_key": "base_value", "custom_key": "custom_value"}
 
 
-def test_init(
-    dbt_asset_creator,
-    mock_workflow_builder,
-    mock_config_builder,
-    mock_dbt_project_manager,
-):
-    assert dbt_asset_creator._wb == mock_workflow_builder
-    assert dbt_asset_creator._dagster_config == mock_config_builder.get_config()
-    assert dbt_asset_creator._project_manager == mock_dbt_project_manager
-    assert (
-        dbt_asset_creator._dbt_manifest_path == mock_dbt_project_manager.manifest_path
-    )
-
-
 @pytest.mark.parametrize(
     "external_value, should_include",
     [

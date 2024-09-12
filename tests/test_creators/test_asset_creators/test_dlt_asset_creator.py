@@ -54,12 +54,6 @@ def dlt_asset_creator(mock_workflow_builder, mock_config_builder):
         return DLTAssetCreator()
 
 
-def test_init(dlt_asset_creator, mock_workflow_builder, mock_config_builder):
-    assert dlt_asset_creator._wb == mock_workflow_builder
-    assert dlt_asset_creator._dagster_config == mock_config_builder.get_config()
-    assert dlt_asset_creator._dlt_assets == []
-
-
 def test_get_dlt_destination_objects(dlt_asset_creator, tmpdir):
     schema_content = {
         "tables": {

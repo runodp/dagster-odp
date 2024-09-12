@@ -154,7 +154,7 @@ class GenericTask(WorkflowTask):
 
     @model_validator(mode="after")
     def validate_params(self) -> Self:
-        self.params = task_registry[self.task_type].model_validate(self.params)
+        self.params = task_registry[self.task_type]["class"].model_validate(self.params)
         return self
 
 

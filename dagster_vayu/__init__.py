@@ -3,7 +3,6 @@ from typing import Optional
 from dagster import Definitions
 
 from .config_manager.builders import ConfigBuilder, WorkflowBuilder
-from .constants import DEFAULT_CONFIG
 from .creators import get_asset_checks, get_assets, get_jobs, get_schedules, get_sensors
 from .resources import SensorContextConfig
 from .resources.definitions import *  # noqa
@@ -28,7 +27,7 @@ def build_definitions(config_path: Optional[str] = None) -> Definitions:
     """
 
     wb = WorkflowBuilder(config_path=config_path)
-    cb = ConfigBuilder(config_data=DEFAULT_CONFIG, config_path=config_path)
+    cb = ConfigBuilder(config_path=config_path)
     dagster_config = cb.get_config()
 
     resources = cb.resource_class_map

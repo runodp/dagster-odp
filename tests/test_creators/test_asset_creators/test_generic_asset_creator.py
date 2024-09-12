@@ -53,14 +53,7 @@ def mock_workflow_builder(task_registry):
 def mock_config_builder():
     mock_cb = Mock()
     mock_cb.get_config.return_value = Mock(
-        resources=Mock(model_dump=Mock(return_value={"resource1": "value1"})),
-        tasks=[
-            Mock(
-                name="custom_task",
-                required_resources=["resource1"],
-                compute_kind="custom",
-            )
-        ],
+        resources=Mock(model_dump=Mock(return_value={"resource1": "value1"}))
     )
     return mock_cb
 
@@ -73,7 +66,14 @@ def task_registry():
         def run(self):
             return {"result": f"Executed with {self.param1}"}
 
-    return {"custom_task": CustomTask}
+    return {
+        "custom_task": {
+            "class": CustomTask,
+            "compute_kind": "custom",
+            "storage_kind": None,
+            "required_resources": ["resource1"],
+        }
+    }
 
 
 @pytest.fixture
@@ -110,7 +110,7 @@ def test_init_and_execute(
     mock_context = mock_asset_execution_context.return_value
 
     result = generic_asset_creator._execute_task_function(
-        "custom_task", {"param1": "value1"}, ["resource1"], mock_context
+        "custom_task", {"param1": "value1"}, mock_context
     )
     assert result == {"result": "Executed with value1"}
 
@@ -132,9 +132,7 @@ def test_materialize_asset(mock_config_param_replacer, generic_asset_creator):
         "_execute_task_function",
         return_value={"result": "success"},
     ):
-        result = generic_asset_creator._materialize_asset(
-            mock_context, mock_spec, ["resource1"]
-        )
+        result = generic_asset_creator._materialize_asset(mock_context, mock_spec)
 
     assert isinstance(result, MaterializeResult)
     assert result.metadata == {"result": "success"}

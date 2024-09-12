@@ -6,7 +6,12 @@ from ..manager import BaseTask, vayu_task
 from ..utils import replace_bq_job_params
 
 
-@vayu_task(task_type="gcs_file_to_bq")
+@vayu_task(
+    task_type="gcs_file_to_bq",
+    required_resources=["bigquery"],
+    compute_kind="bigquery",
+    storage_kind="bigquery",
+)
 class GCSFileToBQ(BaseTask):
     """
     A task that loads data from a Google Cloud Storage (GCS) file to a BigQuery table.
@@ -31,9 +36,6 @@ class GCSFileToBQ(BaseTask):
         Raises:
             ValueError: If the required 'bigquery' resource is not provided.
         """
-
-        if not self._resources or "bigquery" not in self._resources:
-            raise ValueError("required 'bigquery' resource not passed to the asset")
 
         bq_client = self._resources["bigquery"]
 
@@ -60,7 +62,12 @@ class GCSFileToBQ(BaseTask):
         return metadata
 
 
-@vayu_task(task_type="bq_table_to_gcs")
+@vayu_task(
+    task_type="bq_table_to_gcs",
+    required_resources=["bigquery"],
+    compute_kind="bigquery",
+    storage_kind="googlecloud",
+)
 class BQTableToGCS(BaseTask):
     """
     A task that exports data from a BigQuery table to a Google Cloud Storage (GCS) file.
@@ -85,9 +92,6 @@ class BQTableToGCS(BaseTask):
         Raises:
             ValueError: If the required 'bigquery' resource is not provided.
         """
-
-        if not self._resources or "bigquery" not in self._resources:
-            raise ValueError("required 'bigquery' resource not passed to the asset")
 
         bq_client = self._resources["bigquery"]
 

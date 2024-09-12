@@ -9,7 +9,7 @@ def test_shell_command():
     # Setup
     mock_context = Mock(spec=AssetExecutionContext)
     task = ShellCommand(command="echo 'Hello, World!'")
-    task.initialize(mock_context, [])
+    task.initialize(mock_context)
 
     # Execute
     with patch("subprocess.run") as mock_run:

@@ -5,7 +5,7 @@ from typing import Any, Dict, Optional
 from dagster_vayu.tasks.manager import BaseTask, vayu_task
 
 
-@vayu_task("shell_command")
+@vayu_task("shell_command", compute_kind="shell")
 class ShellCommand(BaseTask):
     """
     A task that runs a shell command using subprocess.
