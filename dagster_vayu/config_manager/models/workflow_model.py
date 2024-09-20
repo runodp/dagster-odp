@@ -40,9 +40,11 @@ class ScheduleCronTrigger(BaseModel):
 
 
 class PartitionParams(BaseModel):
-    schedule_type: Union[
-        Literal["HOURLY"], Literal["DAILY"], Literal["WEEKLY"], Literal["MONTHLY"]
-    ]
+    schedule_type: Optional[
+        Union[
+            Literal["HOURLY"], Literal["DAILY"], Literal["WEEKLY"], Literal["MONTHLY"]
+        ]
+    ] = None
     start: str
     end: Optional[str] = None
     timezone: Optional[str] = None
@@ -51,6 +53,7 @@ class PartitionParams(BaseModel):
     hour_offset: Optional[int] = None
     day_offset: Optional[int] = None
     end_offset: Optional[int] = None
+    cron_schedule: Optional[str] = None
 
 
 class WorkflowPartition(BaseModel):
@@ -102,9 +105,10 @@ class WorkflowParams(BaseModel):
 
 class DLTParams(WorkflowParams):
     source_params: Dict[str, Any]
-    pipeline_params: Optional[Dict[str, Any]] = {}
+    pipeline_params: Dict[str, Any] = {}
     destination: str
-    destination_params: Optional[Dict[str, Any]] = {}
+    destination_params: Dict[str, Any] = {}
+    run_params: Dict[str, Any] = {}
     source_module: str
 
     @field_validator("pipeline_params")
@@ -183,7 +187,7 @@ Trigger = Annotated[
 
 class WorkflowJob(BaseModel):
     job_id: str
-    triggers: List[Trigger]
+    triggers: List[Trigger] = []
     asset_selection: Set[str]
     dbt_selection: Optional[Set[str]] = set()
     description: Optional[str] = ""

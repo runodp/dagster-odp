@@ -1,8 +1,6 @@
 import json
 from typing import Any, Dict, Iterator, List, Mapping, Optional
 
-from dagster_dbt import DagsterDbtTranslator, DbtCliEventMessage, dbt_assets
-
 from dagster import (
     AssetExecutionContext,
     AssetsDefinition,
@@ -11,8 +9,10 @@ from dagster import (
     TimeWindowPartitionsDefinition,
     external_assets_from_specs,
 )
+from dagster_dbt import DagsterDbtTranslator, DbtCliEventMessage, dbt_assets
 
 from ...config_manager.models.workflow_model import DBTTask
+from ...resources.definitions import VayuDbtResource
 from .base_asset_creator import BaseAssetCreator
 from .dbt_project_manager import DBTProjectManager
 from .utils import generate_partition_params
@@ -64,7 +64,7 @@ class DBTAssetCreator(BaseAssetCreator):
         super().__init__()
         dbt_cli_resource = self._resource_class_map.get("dbt")
         if dbt_cli_resource:
-            self._dbt_cli_resource = dbt_cli_resource
+            self._dbt_cli_resource: VayuDbtResource = dbt_cli_resource
         else:
             raise ValueError("dbt resource must be configured in dagster config")
 
@@ -215,9 +215,13 @@ class DBTAssetCreator(BaseAssetCreator):
         partition_selection = " ".join(
             [dbt_asset.params.selection for dbt_asset in dbt_config_assets]
         )
-        all_dbt_assets.append(
-            self._build_asset(
-                exclude=partition_selection, name="unselected_dbt_assets", dbt_vars={}
+
+        if self._dbt_cli_resource.load_all_models:
+            all_dbt_assets.append(
+                self._build_asset(
+                    exclude=partition_selection,
+                    name="unselected_dbt_assets",
+                    dbt_vars={},
+                )
             )
-        )
         return all_dbt_assets + self.build_dbt_external_sources()

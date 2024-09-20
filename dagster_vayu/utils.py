@@ -120,12 +120,15 @@ class ConfigParamReplacer:
         replacement_config["context"]["run_id"] = self.context.run.run_id.split("-")[0]
         if self.context.has_partition_key:
             replacement_config["context"]["partition_key"] = self.context.partition_key
+        try:
             replacement_config["context"][
                 "partition_window_start"
             ] = self.context.partition_time_window.start.isoformat()
             replacement_config["context"][
                 "partition_window_end"
             ] = self.context.partition_time_window.end.isoformat()
+        except DagsterInvariantViolationError:
+            pass
 
         if self.depends_on:
             self._add_parent_materializations(replacement_config)
@@ -158,7 +161,7 @@ class ConfigParamReplacer:
                     asset_key=AssetKey(dep.split("/")),
                     asset_partitions=self.context.asset_partition_keys_for_input(
                         parent_asset_key
-                    )[-1:],
+                    ),
                 ),
                 limit=1,
             )

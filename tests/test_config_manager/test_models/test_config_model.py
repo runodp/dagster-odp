@@ -40,7 +40,7 @@ def test_validate_resource_names():
     )
 
 
-def test_validate_unique_names(mock_resource_registry):
+def test_validate_unique_resources(mock_resource_registry):
     with patch.dict(
         "dagster_vayu.config_manager.models.config_model.resource_registry",
         mock_resource_registry,

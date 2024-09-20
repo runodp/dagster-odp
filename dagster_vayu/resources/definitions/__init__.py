@@ -37,6 +37,7 @@ class VayuDbtResource(DbtCliResource):
     """
 
     sources_file_path: Optional[str] = None
+    load_all_models: bool = True
 
     def update_asset_params(
         self,

@@ -13,6 +13,7 @@ from dagster import (
 )
 
 from ...config_manager.models.workflow_model import DLTTask
+from ...resources.definitions.dlt_resource import VayuDltResource
 from .base_asset_creator import BaseAssetCreator
 
 
@@ -102,9 +103,8 @@ class DLTAssetCreator(BaseAssetCreator):
             replaced_params = dlt.update_asset_params(
                 context, self._resource_config_map, dlt_asset.params.model_dump()
             )
-            yield from context.resources.dlt.run(
-                replaced_params, dlt_asset, dlt_asset_names
-            )
+            dlt_client: VayuDltResource = context.resources.dlt
+            yield from dlt_client.run(replaced_params, dlt_asset, dlt_asset_names)
 
         return _dlt_asset_defs
 

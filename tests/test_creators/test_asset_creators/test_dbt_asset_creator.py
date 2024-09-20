@@ -242,9 +242,25 @@ def test_get_assets(mock_build_external_sources, mock_build_asset, dbt_asset_cre
     mock_external_source = Mock(name="external_source")
     mock_build_external_sources.return_value = [mock_external_source]
 
+    # Test when load_all_models is True
+    dbt_asset_creator._dbt_cli_resource.load_all_models = True
     assets = dbt_asset_creator.get_assets()
 
     assert len(assets) == 3  # 1 DBT asset + 1 unselected asset + 1 external source
     assert mock_build_asset.call_count == 2
     mock_build_external_sources.assert_called_once()
     assert assets == [mock_asset1, mock_unselected_assets, mock_external_source]
+
+    # Reset mocks
+    mock_build_asset.reset_mock()
+    mock_build_external_sources.reset_mock()
+    mock_build_asset.side_effect = [mock_asset1]  # Only one call expected
+
+    # Test when load_all_models is False
+    dbt_asset_creator._dbt_cli_resource.load_all_models = False
+    assets = dbt_asset_creator.get_assets()
+
+    assert len(assets) == 2  # 1 DBT asset + 1 external source
+    assert mock_build_asset.call_count == 1
+    mock_build_external_sources.assert_called_once()
+    assert assets == [mock_asset1, mock_external_source]

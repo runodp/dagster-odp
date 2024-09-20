@@ -231,6 +231,7 @@ class VayuDltResource(ConfigurableResource):
             **params["pipeline_params"],
         )
         load_info = dlt_pipeline.run(
-            source_func(**params["source_params"]).with_resources(resource_name)
+            source_func(**params["source_params"]).with_resources(resource_name),
+            **params["run_params"],
         )
         yield from self.materialize_dlt_results(op_name, load_info, dlt_asset_names)

@@ -15,7 +15,7 @@ def validate_resource_names(value: str) -> str:
 
 class GenericResource(BaseModel):
     resource_kind: str
-    params: Any
+    params: Any = {}
 
     @field_validator("resource_kind")
     @classmethod
@@ -34,7 +34,7 @@ class DagsterConfig(BaseModel):
     resources: List[GenericResource] = []
 
     @model_validator(mode="after")
-    def validate_unique_names(self) -> Self:
+    def validate_unique_resources(self) -> Self:
         resource_kinds = set()
 
         for resource in self.resources:
