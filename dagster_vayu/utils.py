@@ -1,4 +1,5 @@
 from collections import defaultdict
+from datetime import datetime
 from typing import Any, Callable, Dict, List, TypeVar
 
 import chevron
@@ -129,6 +130,7 @@ class ConfigParamReplacer:
             ] = self.context.partition_time_window.end.isoformat()
         except DagsterInvariantViolationError:
             pass
+        replacement_config["utils"]["now"] = datetime.now().isoformat()
 
         if self.depends_on:
             self._add_parent_materializations(replacement_config)

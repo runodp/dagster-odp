@@ -3,6 +3,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 from dagster import AssetExecutionContext, DagsterInvariantViolationError
+from freezegun import freeze_time
 
 from dagster_vayu.utils import ConfigParamReplacer, has_partition_def
 
@@ -71,6 +72,7 @@ class TestConfigParamReplacer:
             "list": ["replaced"],
         }
 
+    @freeze_time("2023-05-17T10:30:00")
     @patch("dagster_vayu.utils.ConfigParamReplacer._get_materialization")
     def test_replace(self, mock_get_materialization, config_replacer):
         mock_get_materialization.return_value = Mock(
@@ -85,6 +87,7 @@ class TestConfigParamReplacer:
             "partition_start": "{{context.partition_window_start}}",
             "partition_end": "{{context.partition_window_end}}",
             "parent_param": "{{parent_asset.parent_key}}",
+            "current_time": "{{utils.now}}",
         }
 
         result = config_replacer.replace(params)
@@ -97,7 +100,9 @@ class TestConfigParamReplacer:
             "partition_start": "2023-05-15T00:00:00+00:00",
             "partition_end": "2023-05-16T00:00:00+00:00",
             "parent_param": "parent_value",
+            "current_time": datetime.now().isoformat(),
         }
+
         assert result == expected
 
     @patch("dagster_vayu.utils.ConfigParamReplacer._get_materialization")
