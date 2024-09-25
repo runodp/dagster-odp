@@ -11,7 +11,7 @@ from dagster_vayu.tasks.definitions.duckdb_tasks import (
 )
 
 
-class DuckDBResource:
+class DuckDBResourceWrapper:
     def __init__(self):
         self.db = duckdb.connect(":memory:")
 
@@ -24,10 +24,19 @@ class DuckDBResource:
     def close(self):
         self.db.close()
 
+    def get_connection(self):
+        return self
+
+    def prepare_gcs_uri(self, uri):
+        return uri
+
+    def register_gcs_if_needed(self, con, uri):
+        pass  # No-op for local testing
+
 
 @pytest.fixture(scope="function")
 def duckdb_resource():
-    resource = DuckDBResource()
+    resource = DuckDBResourceWrapper()
     yield resource
     resource.close()  # Close the connection after the test
 

@@ -1,8 +1,13 @@
 from unittest.mock import Mock, patch
 
 import pytest
-from dagster_vayu.tasks.definitions.gcp_tasks import BQTableToGCS, GCSFileToBQ
 from google.cloud import bigquery as bq
+
+from dagster_vayu.tasks.definitions.gcp_tasks import (
+    BQTableToGCS,
+    GCSFileDownload,
+    GCSFileToBQ,
+)
 
 
 @pytest.fixture
@@ -10,6 +15,13 @@ def mock_bigquery():
     with patch("google.cloud.bigquery.Client") as mock_client:
         mock_instance = mock_client.return_value
         mock_instance.__enter__.return_value = mock_instance
+        yield mock_instance
+
+
+@pytest.fixture
+def mock_gcs():
+    with patch("google.cloud.storage.Client") as mock_client:
+        mock_instance = mock_client.return_value
         yield mock_instance
 
 
@@ -106,3 +118,64 @@ def test_bq_table_to_gcs(mock_bigquery, mock_job, mock_table):
         "destination_file_uri": "gs://test-bucket/output",
         "row_count": mock_table.num_rows,
     }
+
+
+def test_gcs_file_download(mock_gcs):
+    # Arrange
+    source_file_uri = "gs://test-bucket/test-folder/"
+    destination_file_path = "/local/path/to/destination/"
+
+    mock_bucket = Mock()
+    mock_blob1 = Mock(name="test-folder/file1.txt", size=100)
+    mock_blob2 = Mock(name="test-folder/file2.txt", size=200)
+
+    # Set up mock return values for name.replace().lstrip()
+    mock_blob1.name.replace.return_value.lstrip.return_value = "file1.txt"
+    mock_blob2.name.replace.return_value.lstrip.return_value = "file2.txt"
+
+    mock_bucket.list_blobs.return_value = [mock_blob1, mock_blob2]
+    mock_gcs.bucket.return_value = mock_bucket
+
+    task = GCSFileDownload(
+        source_file_uri=source_file_uri,
+        destination_file_path=destination_file_path,
+    )
+    task._resources = {"gcs": mock_gcs}
+
+    # Act
+    with (
+        patch("os.makedirs"),
+        patch("google.cloud.storage.blob.Blob.download_to_filename"),
+    ):
+        result = task.run()
+
+    # Assert
+    mock_gcs.bucket.assert_called_once_with("test-bucket")
+    mock_bucket.list_blobs.assert_called_once_with(prefix="test-folder/")
+    assert result == {
+        "source_file_uri": source_file_uri,
+        "destination_file_path": destination_file_path,
+        "file_count": 2,
+        "total_size_bytes": 300,
+    }
+
+
+def test_gcs_file_download_invalid_uri():
+    task = GCSFileDownload(
+        source_file_uri="invalid-uri", destination_file_path="/local/path/"
+    )
+
+    with pytest.raises(ValueError, match="Invalid GCS URI. Must start with 'gs://'"):
+        task._validate_paths()
+
+
+def test_gcs_file_download_invalid_destination():
+    task = GCSFileDownload(
+        source_file_uri="gs://test-bucket/test-folder/",
+        destination_file_path="/local/path/file.txt",
+    )
+
+    with pytest.raises(
+        ValueError, match="Destination path .* appears to contain a file name"
+    ):
+        task._validate_paths()

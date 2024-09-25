@@ -1,28 +1,29 @@
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Iterator
+from typing import Iterator
 
 import duckdb
-from dagster import ConfigurableResource, IAttachDifferentObjectToOpContext
+from dagster import ConfigurableResource
+from fsspec import filesystem
 
 from dagster_vayu.resources import vayu_resource
 
 
 @vayu_resource("duckdb")
-class DuckDbResource(ConfigurableResource, IAttachDifferentObjectToOpContext):
+class DuckDbResource(ConfigurableResource):
     """
-    A configurable resource for managing DuckDB connections.
+    A configurable resource for managing DuckDB connections and related operations.
 
     This resource provides methods for creating and managing DuckDB connections,
-    as well as attaching the connection to the execution context.
+    as well as utility functions for working with Google Cloud Storage (GCS) URIs.
 
     Attributes:
         database_path (str): The path to the DuckDB database file.
 
     Methods:
         get_connection: A context manager that yields a DuckDB connection.
-        get_object_to_set_on_execution_context: Overrides the method from
-            IAttachDifferentObjectToOpContext to return the connection object.
+        prepare_gcs_uri: Prepares a GCS URI for use with DuckDB.
+        register_gcs_if_needed: Registers the GCS filesystem if needed.
     """
 
     database_path: str
@@ -46,5 +47,17 @@ class DuckDbResource(ConfigurableResource, IAttachDifferentObjectToOpContext):
 
         yield duckdb.connect(str(path))
 
-    def get_object_to_set_on_execution_context(self) -> Any:
-        return self.get_connection()
+    def prepare_gcs_uri(self, uri: str) -> str:
+        """
+        Prepares a GCS URI for use with DuckDB.
+        """
+        if uri.startswith("gs://"):
+            return "gcs:///" + uri[5:]
+        return uri
+
+    def register_gcs_if_needed(self, con, uri: str) -> None:
+        """
+        Registers the GCS filesystem if the URI is a GCS URI.
+        """
+        if uri.startswith("gs://"):
+            con.register_filesystem(filesystem("gcs"))

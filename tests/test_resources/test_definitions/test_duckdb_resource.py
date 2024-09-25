@@ -1,3 +1,5 @@
+from unittest.mock import Mock
+
 import duckdb
 import pytest
 
@@ -27,8 +29,35 @@ def test_duckdb_resource_get_connection_invalid_path():
 
     with pytest.raises(
         ValueError,
-        match="Invalid path: /nonexistent/path/to/invalid.db."
-        " Directory does not exist.",
+        match="Invalid path: /nonexistent/path/to/invalid.db. Directory does not exist.",
     ):
         with resource.get_connection():
             pass
+
+
+def test_prepare_gcs_uri():
+    resource = DuckDbResource(database_path="test.db")
+
+    # Test GCS URI
+    gcs_uri = "gs://bucket/file.parquet"
+    assert resource.prepare_gcs_uri(gcs_uri) == "gcs:///bucket/file.parquet"
+
+    # Test non-GCS URI
+    local_uri = "/path/to/file.parquet"
+    assert resource.prepare_gcs_uri(local_uri) == local_uri
+
+
+def test_register_gcs_if_needed():
+    resource = DuckDbResource(database_path="test.db")
+    mock_con = Mock()
+
+    # Test GCS URI
+    gcs_uri = "gs://bucket/file.parquet"
+    resource.register_gcs_if_needed(mock_con, gcs_uri)
+    mock_con.register_filesystem.assert_called_once()
+
+    # Test non-GCS URI
+    local_uri = "/path/to/file.parquet"
+    mock_con.reset_mock()
+    resource.register_gcs_if_needed(mock_con, local_uri)
+    mock_con.register_filesystem.assert_not_called()

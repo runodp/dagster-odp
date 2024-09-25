@@ -1,9 +1,9 @@
 from pathlib import Path
 from typing import Any, Dict
 
-from fsspec import filesystem
-
 from dagster_vayu.tasks.manager import BaseTask, vayu_task
+
+from ...resources.definitions.duckdb_resource import DuckDbResource
 
 
 @vayu_task(
@@ -27,15 +27,15 @@ class FileToDuckDb(BaseTask):
     source_file_uri: str
 
     def run(self) -> Dict[str, Any]:
-        duckdb_connection = self._resources["duckdb"]
+        duckdb_client: DuckDbResource = self._resources["duckdb"]
 
+        duckdb_connection = duckdb_client.get_connection()
         # Connect to the DuckDB database
         with duckdb_connection as con:
-            if self.source_file_uri.startswith("gs://"):
-                self.source_file_uri = "gcs:///" + self.source_file_uri[5:]
-                con.register_filesystem(filesystem("gcs"))
+            source_uri = duckdb_client.prepare_gcs_uri(self.source_file_uri)
+            duckdb_client.register_gcs_if_needed(con, self.source_file_uri)
 
-            data = con.sql(f"SELECT * FROM '{self.source_file_uri}'")
+            data = con.sql(f"SELECT * FROM '{source_uri}'")
             con.execute(
                 f"CREATE OR REPLACE TABLE {self.destination_table_id} "
                 "AS SELECT * FROM data"
@@ -64,31 +64,29 @@ class DuckDbQuery(BaseTask):
     query: str
     is_file: bool = False
 
+    def _get_query(self) -> str:
+        if self.is_file:
+            query_path = Path(self.query)
+            if not query_path.exists():
+                raise FileNotFoundError(f"Query file not found: {self.query}")
+            return query_path.read_text(encoding="utf-8")
+        return self.query
+
     def run(self) -> Dict[str, Any]:
-        duckdb_connection = self._resources["duckdb"]
+        duckdb_client = self._resources["duckdb"]
+
+        duckdb_connection = duckdb_client.get_connection()
 
         # Connect to the DuckDB database
         with duckdb_connection as con:
-            # Load query from file if is_file is True
-            if self.is_file:
-                query_path = Path(self.query)
-                if not query_path.exists():
-                    raise FileNotFoundError(f"Query file not found: {self.query}")
-                with open(query_path, "r", encoding="utf-8") as file:
-                    query = file.read()
-            else:
-                query = self.query
-
-            # Execute the query
+            query = self._get_query()
             result = con.sql(query)
 
-            metadata = (
+            return (
                 {"row_count": result.shape[0], "column_names": result.columns}
                 if result
                 else {}
             )
-
-            return metadata
 
 
 @vayu_task("duckdb_table_to_file", required_resources=["duckdb"], compute_kind="duckdb")
@@ -106,27 +104,22 @@ class DuckDbTableToFile(BaseTask):
     destination_file_uri: str
 
     def run(self) -> Dict[str, Any]:
-        duckdb_connection = self._resources["duckdb"]
+        duckdb_client: DuckDbResource = self._resources["duckdb"]
 
-        # Connect to the DuckDB database
+        duckdb_connection = duckdb_client.get_connection()
+
         with duckdb_connection as con:
 
-            # Prepare the destination URI
-            if self.destination_file_uri.startswith("gs://"):
-                destination_uri = "gcs:///" + self.destination_file_uri[5:]
-                con.register_filesystem(filesystem("gcs"))
-            else:
-                destination_uri = self.destination_file_uri
+            destination_uri = duckdb_client.prepare_gcs_uri(self.destination_file_uri)
+            duckdb_client.register_gcs_if_needed(con, destination_uri)
 
-            # Write the table to the file
             con.sql(f"COPY {self.source_table_id} TO '{destination_uri}'")
-
             row_count = con.sql(
                 f"SELECT COUNT(*) FROM {self.source_table_id}"
-            ).fetchone()[0]
+            ).fetchone()
 
             return {
-                "row_count": row_count,
+                "row_count": row_count[0] if row_count else None,
                 "source_table_id": self.source_table_id,
                 "destination_file_uri": self.destination_file_uri,
             }

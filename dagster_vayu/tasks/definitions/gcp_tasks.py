@@ -1,6 +1,9 @@
+import os
+import pathlib
 from typing import Any, Dict
 
 from google.cloud import bigquery as bq
+from google.cloud import storage
 
 from ..manager import BaseTask, vayu_task
 from ..utils import replace_bq_job_params
@@ -118,3 +121,84 @@ class BQTableToGCS(BaseTask):
             }
 
         return metadata
+
+
+@vayu_task(
+    task_type="gcs_file_download",
+    required_resources=["gcs"],
+    compute_kind="googlecloud",
+    storage_kind="filesystem",
+)
+class GCSFileDownload(BaseTask):
+    """
+    A task that downloads files from a Google Cloud Storage path to a local filesystem.
+
+    Attributes:
+        source_file_uri (str): The URI of the source path in GCS
+            (e.g., 'gs://bucket-name/path/to/files/').
+        destination_file_path (str): The local directory where files should be saved.
+    """
+
+    source_file_uri: str
+    destination_file_path: str
+
+    def run(self) -> Dict:
+        """
+        Downloads files from GCS to a local filesystem using the batch context manager.
+
+        Returns:
+            Dict: Metadata about the downloaded files.
+
+        Raises:
+            ValueError: If the GCS URI is invalid or if
+                the destination path is not a valid directory path.
+        """
+        self._validate_paths()
+
+        gcs_client: storage.Client = self._resources["gcs"]
+        bucket_name, prefix = self._parse_gcs_uri()
+        bucket = gcs_client.bucket(bucket_name)
+        blobs_to_download = list(bucket.list_blobs(prefix=prefix))
+
+        if not blobs_to_download:
+            print(f"No files found in {self.source_file_uri}")
+            return {"file_count": 0, "total_size_bytes": 0}
+
+        os.makedirs(self.destination_file_path, exist_ok=True)
+        total_size = self._download_blobs(blobs_to_download, prefix)
+
+        return {
+            "source_file_uri": self.source_file_uri,
+            "destination_file_path": self.destination_file_path,
+            "file_count": len(blobs_to_download),
+            "total_size_bytes": total_size,
+        }
+
+    def _validate_paths(self) -> None:
+        if not self.source_file_uri.startswith("gs://"):
+            raise ValueError("Invalid GCS URI. Must start with 'gs://'")
+
+        # Check if the destination path contains a file name
+        if pathlib.Path(self.destination_file_path).suffix:
+            raise ValueError(
+                f"Destination path {self.destination_file_path} appears to contain "
+                f"a file name. Please provide only a directory path."
+            )
+
+    def _parse_gcs_uri(self) -> tuple:
+        parts = self.source_file_uri.split("/")
+        bucket_name = parts[2]
+        prefix = "/".join(parts[3:])
+        return bucket_name, prefix
+
+    def _download_blobs(self, blobs: list, prefix: str) -> int:
+        total_size = 0
+        for blob in blobs:
+            local_path = os.path.join(
+                self.destination_file_path,
+                blob.name.replace(prefix, "").lstrip("/"),
+            )
+            os.makedirs(os.path.dirname(local_path), exist_ok=True)
+            blob.download_to_filename(local_path)
+            total_size += blob.size
+        return total_size
