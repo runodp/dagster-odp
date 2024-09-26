@@ -1,3 +1,8 @@
+import json
+
+import pytest
+import yaml
+
 from dagster_vayu.config_manager.builders.base_builder import BaseBuilder
 
 
@@ -37,3 +42,25 @@ def test_merge_configs():
         "dict_field": {"a": 1, "b": 3, "c": 4},
         "simple_field": "new_value",
     }
+
+
+def test_read_config_file(tmp_path):
+    builder = ConcreteBuilder()
+
+    # Test JSON file
+    json_file = tmp_path / "config.json"
+    json_data = {"key": "value", "list": [1, 2, 3]}
+    json_file.write_text(json.dumps(json_data))
+    assert builder._read_config_file(json_file) == json_data
+
+    # Test YAML file
+    yaml_file = tmp_path / "config.yaml"
+    yaml_data = {"key": "value", "list": [1, 2, 3]}
+    yaml_file.write_text(yaml.dump(yaml_data))
+    assert builder._read_config_file(yaml_file) == yaml_data
+
+    # Test unsupported file format
+    unsupported_file = tmp_path / "config.txt"
+    unsupported_file.touch()
+    with pytest.raises(ValueError, match="Unsupported file format: .txt"):
+        builder._read_config_file(unsupported_file)

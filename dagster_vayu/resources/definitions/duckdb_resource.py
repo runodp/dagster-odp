@@ -55,7 +55,7 @@ class DuckDbResource(ConfigurableResource):
             return "gcs:///" + uri[5:]
         return uri
 
-    def register_gcs_if_needed(self, con, uri: str) -> None:
+    def register_gcs_if_needed(self, con: duckdb.DuckDBPyConnection, uri: str) -> None:
         """
         Registers the GCS filesystem if the URI is a GCS URI.
         """

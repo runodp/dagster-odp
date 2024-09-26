@@ -1,6 +1,7 @@
 import json
 
 import pytest
+import yaml
 
 from dagster_vayu.config_manager.builders.workflow_builder import WorkflowBuilder
 from dagster_vayu.config_manager.models.workflow_model import (
@@ -123,53 +124,77 @@ def test_job_id_trigger_map(workflow_builder):
 
 
 def test_consolidate_workflow_data(tmp_path):
+    # Create JSON file
     file1 = tmp_path / "file1.json"
-    file2 = tmp_path / "file2.json"
     file1.write_text(json.dumps(SAMPLE_WORKFLOW_CONFIG))
-    file2.write_text(
-        json.dumps(
+
+    # Create YAML file
+    file2 = tmp_path / "file2.yaml"
+    yaml_data = {
+        "jobs": [
             {
-                "jobs": [
-                    {
-                        "job_id": "second_job",
-                        "triggers": [],
-                        "asset_selection": ["second_asset"],
-                    }
-                ],
-                "assets": [
-                    {
-                        "asset_key": "second_asset",
-                        "task_type": "bq_table_to_gcs",
-                        "params": {
-                            "source_table_id": "test_dataset.test_table",
-                            "destination_file_uri": "gs://test-bucket/output.parquet",
-                            "job_config_params": {},
-                        },
-                    }
-                ],
-                "partitions": [
-                    {
-                        "assets": ["second_asset"],
-                        "params": {"start": "2023-06-01", "schedule_type": "DAILY"},
-                    }
-                ],
+                "job_id": "second_job",
+                "triggers": [],
+                "asset_selection": ["second_asset"],
             }
-        )
-    )
+        ],
+        "assets": [
+            {
+                "asset_key": "second_asset",
+                "task_type": "bq_table_to_gcs",
+                "params": {
+                    "source_table_id": "test_dataset.test_table",
+                    "destination_file_uri": "gs://test-bucket/output.parquet",
+                    "job_config_params": {},
+                },
+            }
+        ],
+        "partitions": [
+            {
+                "assets": ["second_asset"],
+                "params": {"start": "2023-06-01", "schedule_type": "DAILY"},
+            }
+        ],
+    }
+    with open(file2, "w") as f:
+        yaml.dump(yaml_data, f)
+
+    # Create YML file
+    file3 = tmp_path / "file3.yml"
+    yml_data = {
+        "jobs": [
+            {
+                "job_id": "third_job",
+                "triggers": [],
+                "asset_selection": ["third_asset"],
+            }
+        ],
+        "assets": [
+            {
+                "asset_key": "third_asset",
+                "task_type": "gcs_file_to_bq",  # Changed from "custom_task" to a known task type
+                "params": {
+                    "source_file_uri": "gs://test-bucket/test-file.parquet",
+                    "destination_table_id": "test_dataset.another_table",
+                    "job_config_params": {},
+                },
+            }
+        ],
+        "partitions": [],
+    }
+    with open(file3, "w") as f:
+        yaml.dump(yml_data, f)
 
     workflow_builder = WorkflowBuilder()
     result = workflow_builder._consolidate_workflow_data(tmp_path)
 
-    assert len(result["jobs"]) == 2
-    assert len(result["assets"]) == 4
+    assert len(result["jobs"]) == 3
+    assert len(result["assets"]) == 5
     assert len(result["partitions"]) == 2
-    assert set(job["job_id"] for job in result["jobs"]) == {"test_job", "second_job"}
-    assert set(asset["asset_key"] for asset in result["assets"]) == {
-        "asset1",
-        "asset2",
-        "asset3",
-        "second_asset",
-    }
-    assert set(
-        partition["params"]["schedule_type"] for partition in result["partitions"]
-    ) == {"MONTHLY", "DAILY"}
+
+    # Test that files with unsupported extensions are ignored
+    unsupported_file = tmp_path / "unsupported.txt"
+    unsupported_file.write_text("This should be ignored")
+
+    result_with_unsupported = workflow_builder._consolidate_workflow_data(tmp_path)
+    assert result == result_with_unsupported

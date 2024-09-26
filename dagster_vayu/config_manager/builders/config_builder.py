@@ -1,4 +1,3 @@
-import json
 from pathlib import Path
 from typing import Any, Dict, Optional
 
@@ -27,14 +26,28 @@ class ConfigBuilder(BaseBuilder):
             self._config = DagsterConfig()
             return
 
-        resources_file = config_path / "dagster_config.json"
-        if not resources_file.exists():
+        config_files = [
+            config_path / "dagster_config.json",
+            config_path / "dagster_config.yml",
+            config_path / "dagster_config.yaml",
+        ]
+
+        existing_files = [f for f in config_files if f.exists()]
+
+        if len(existing_files) > 1:
+            raise ValueError(
+                f"Multiple configuration files found: "
+                f"{', '.join(str(f) for f in existing_files)}. "
+                f"Please use only one configuration file."
+            )
+
+        if not existing_files:
             self._config = DagsterConfig()
             return
 
-        with resources_file.open("r", encoding="utf-8") as file:
-            data = json.load(file)
-            self._config = DagsterConfig(**data)
+        config_file = existing_files[0]
+        data = self._read_config_file(config_file)
+        self._config = DagsterConfig(**data)
 
     def get_config(self) -> DagsterConfig:
         return self._config

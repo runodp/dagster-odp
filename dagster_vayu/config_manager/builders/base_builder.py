@@ -1,7 +1,10 @@
+import json
 import os
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Any, Dict, Optional, Self
+
+import yaml
 
 
 class BaseBuilder(ABC):
@@ -62,3 +65,13 @@ class BaseBuilder(ABC):
                 self._merge_configs(merged_config[key], value)
             else:
                 merged_config[key] = value
+
+    def _read_config_file(self, file_path: Path) -> Dict:
+        """Read and parse a config file (JSON or YAML)."""
+        with file_path.open("r", encoding="utf-8") as file:
+            if file_path.suffix.lower() in (".yml", ".yaml"):
+                return yaml.safe_load(file)
+            elif file_path.suffix.lower() == ".json":
+                return json.load(file)
+            else:
+                raise ValueError(f"Unsupported file format: {file_path.suffix}")

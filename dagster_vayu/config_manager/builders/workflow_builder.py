@@ -1,4 +1,3 @@
-import json
 from collections import defaultdict
 from pathlib import Path
 from typing import Dict, List, Literal, Optional, Type, Union, overload
@@ -56,11 +55,16 @@ class WorkflowBuilder(BaseBuilder):
 
     def _consolidate_workflow_data(self, workflow_dir: Path) -> Dict:
         merged_data = WorkflowConfig().model_dump()
-        for file_path in workflow_dir.glob("*.json"):
-            with file_path.open("r", encoding="utf-8") as file:
-                data = json.load(file)
-                workflow_config = WorkflowConfig.model_validate(data)
-                self._merge_configs(merged_data, workflow_config.model_dump())
+
+        config_files = []
+
+        for ext in ["*.json", "*.yml", "*.yaml"]:
+            config_files.extend(workflow_dir.glob(ext))
+
+        for file_path in config_files:
+            data = self._read_config_file(file_path)
+            workflow_config = WorkflowConfig.model_validate(data)
+            self._merge_configs(merged_data, workflow_config.model_dump())
         return merged_data
 
     @property

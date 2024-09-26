@@ -3,7 +3,7 @@ import pathlib
 from typing import Any, Dict
 
 from google.cloud import bigquery as bq
-from google.cloud import storage
+from google.cloud.storage import Client as GCSClient
 
 from ..manager import BaseTask, vayu_task
 from ..utils import replace_bq_job_params
@@ -155,7 +155,7 @@ class GCSFileDownload(BaseTask):
         """
         self._validate_paths()
 
-        gcs_client: storage.Client = self._resources["gcs"]
+        gcs_client: GCSClient = self._resources["gcs"]
         bucket_name, prefix = self._parse_gcs_uri()
         bucket = gcs_client.bucket(bucket_name)
         blobs_to_download = list(bucket.list_blobs(prefix=prefix))
