@@ -56,7 +56,7 @@ class WorkflowBuilder(BaseBuilder):
     def _consolidate_workflow_data(self, workflow_dir: Path) -> Dict:
         merged_data = WorkflowConfig().model_dump()
 
-        config_files = []
+        config_files: List[Path] = []
 
         for ext in ["*.json", "*.yml", "*.yaml"]:
             config_files.extend(workflow_dir.glob(ext))

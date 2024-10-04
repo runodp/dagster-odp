@@ -3,7 +3,7 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "dagster-vayu"
+name = "dagster-odp"
 dynamic = ["version"]
 description = "A data engineering framework using Dagster, dbt, and Google Cloud"
 readme = "README.md"
@@ -36,8 +36,9 @@ dependencies = [
 dev = [
     "pytest",
     "coverage",
-    "freezegun"
+    "freezegun",
+    "mkdocs-material"
 ]
 
 [tool.setuptools]
-packages = ["dagster_vayu"]
+packages = ["dagster_odp"]

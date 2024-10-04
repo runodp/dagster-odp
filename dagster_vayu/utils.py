@@ -10,6 +10,7 @@ from dagster import (
     DagsterInvariantViolationError,
     EventRecordsFilter,
 )
+from dagster._check.functions import CheckError
 from dateutil import parser
 
 T = TypeVar("T", Dict, List, str)
@@ -128,8 +129,11 @@ class ConfigParamReplacer:
             replacement_config["context"][
                 "partition_window_end"
             ] = self.context.partition_time_window.end.isoformat()
-        except DagsterInvariantViolationError:
+        # Adding CheckError because that's thrown instead of
+        # DagsterInvariantViolationError. Not sure why tho
+        except (DagsterInvariantViolationError, CheckError):
             pass
+
         replacement_config["utils"]["now"] = datetime.now().isoformat()
 
         if self.depends_on:
