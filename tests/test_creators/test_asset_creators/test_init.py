@@ -3,16 +3,16 @@ from unittest.mock import Mock, patch
 import pytest
 from dagster import AssetsDefinition
 
-from dagster_vayu.creators.asset_creators import get_assets
+from dagster_odp.creators.asset_creators import get_assets
 
 
 @pytest.fixture
 def mock_asset_creators():
     with (
-        patch("dagster_vayu.creators.asset_creators.DBTAssetCreator") as mock_dbt,
-        patch("dagster_vayu.creators.asset_creators.DLTAssetCreator") as mock_dlt,
+        patch("dagster_odp.creators.asset_creators.DBTAssetCreator") as mock_dbt,
+        patch("dagster_odp.creators.asset_creators.DLTAssetCreator") as mock_dlt,
         patch(
-            "dagster_vayu.creators.asset_creators.GenericAssetCreator"
+            "dagster_odp.creators.asset_creators.GenericAssetCreator"
         ) as mock_generic,
     ):
 

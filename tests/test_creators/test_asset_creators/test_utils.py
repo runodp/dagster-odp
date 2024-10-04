@@ -2,7 +2,7 @@ import pytest
 from dagster._core.definitions.partition import DEFAULT_DATE_FORMAT, ScheduleType
 from dagster._utils.partitions import DEFAULT_HOURLY_FORMAT_WITHOUT_TIMEZONE
 
-from dagster_vayu.creators.asset_creators.utils import generate_partition_params
+from dagster_odp.creators.asset_creators.utils import generate_partition_params
 
 
 @pytest.mark.parametrize(

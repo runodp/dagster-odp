@@ -2,7 +2,7 @@ from unittest.mock import patch
 
 import pytest
 
-from dagster_vayu.config_manager.models.config_model import (
+from dagster_odp.config_manager.models.config_model import (
     DagsterConfig,
     GenericResource,
     validate_resource_names,
@@ -42,7 +42,7 @@ def test_validate_resource_names():
 
 def test_validate_unique_resources(mock_resource_registry):
     with patch.dict(
-        "dagster_vayu.config_manager.models.config_model.resource_registry",
+        "dagster_odp.config_manager.models.config_model.resource_registry",
         mock_resource_registry,
         clear=True,
     ):

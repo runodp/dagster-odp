@@ -9,14 +9,14 @@ from dagster import (
 )
 from dagster._core.definitions.partition import ScheduleType
 
-from dagster_vayu.config_manager.models.workflow_model import (
+from dagster_odp.config_manager.models.workflow_model import (
     GenericTask,
     PartitionParams,
 )
-from dagster_vayu.creators.asset_creators.generic_asset_creator import (
+from dagster_odp.creators.asset_creators.generic_asset_creator import (
     GenericAssetCreator,
 )
-from dagster_vayu.tasks.manager.base_task import BaseTask
+from dagster_odp.tasks.manager.base_task import BaseTask
 
 
 @pytest.fixture
@@ -27,7 +27,7 @@ def mock_workflow_builder(task_registry):
         "asset2": PartitionParams(schedule_type="MONTHLY", start="2023-01-01"),
     }
     with patch(
-        "dagster_vayu.config_manager.models.workflow_model.task_registry", task_registry
+        "dagster_odp.config_manager.models.workflow_model.task_registry", task_registry
     ):
         mock_wb.generic_assets = [
             GenericTask(
@@ -80,15 +80,15 @@ def task_registry():
 def generic_asset_creator(mock_workflow_builder, mock_config_builder, task_registry):
     with (
         patch(
-            "dagster_vayu.creators.asset_creators.base_asset_creator.WorkflowBuilder",
+            "dagster_odp.creators.asset_creators.base_asset_creator.WorkflowBuilder",
             return_value=mock_workflow_builder,
         ),
         patch(
-            "dagster_vayu.creators.asset_creators.base_asset_creator.ConfigBuilder",
+            "dagster_odp.creators.asset_creators.base_asset_creator.ConfigBuilder",
             return_value=mock_config_builder,
         ),
         patch(
-            "dagster_vayu.creators.asset_creators.generic_asset_creator.task_registry",
+            "dagster_odp.creators.asset_creators.generic_asset_creator.task_registry",
             task_registry,
         ),
     ):
@@ -96,7 +96,7 @@ def generic_asset_creator(mock_workflow_builder, mock_config_builder, task_regis
 
 
 @patch(
-    "dagster_vayu.creators.asset_creators.generic_asset_creator.AssetExecutionContext"
+    "dagster_odp.creators.asset_creators.generic_asset_creator.AssetExecutionContext"
 )
 def test_init_and_execute(
     mock_asset_execution_context,
@@ -115,7 +115,7 @@ def test_init_and_execute(
     assert result == {"result": "Executed with value1"}
 
 
-@patch("dagster_vayu.creators.asset_creators.generic_asset_creator.ConfigParamReplacer")
+@patch("dagster_odp.creators.asset_creators.generic_asset_creator.ConfigParamReplacer")
 def test_materialize_asset(mock_config_param_replacer, generic_asset_creator):
     mock_context = Mock(spec=AssetExecutionContext)
     mock_spec = Mock(
@@ -150,9 +150,9 @@ def test_get_asset_key_split(generic_asset_creator, asset_key, expected):
     assert generic_asset_creator._get_asset_key_split(asset_key) == expected
 
 
-@patch("dagster_vayu.creators.asset_creators.generic_asset_creator.asset")
+@patch("dagster_odp.creators.asset_creators.generic_asset_creator.asset")
 @patch(
-    "dagster_vayu.creators.asset_creators.generic_asset_creator.generate_partition_params"
+    "dagster_odp.creators.asset_creators.generic_asset_creator.generate_partition_params"
 )
 def test_build_asset(mock_generate_partition_params, mock_asset, generic_asset_creator):
     mock_spec = Mock(

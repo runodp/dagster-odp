@@ -9,14 +9,14 @@ from dagster._core.definitions.unresolved_asset_job_definition import (
     UnresolvedAssetJobDefinition,
 )
 
-from dagster_vayu.config_manager.builders.workflow_builder import WorkflowBuilder
-from dagster_vayu.config_manager.models.workflow_model import (
+from dagster_odp.config_manager.builders.workflow_builder import WorkflowBuilder
+from dagster_odp.config_manager.models.workflow_model import (
     ScheduleCronParams,
     ScheduleCronTrigger,
     SchedulePartitionTrigger,
     ScheduleTrigger,
 )
-from dagster_vayu.creators.schedule_creator import (
+from dagster_odp.creators.schedule_creator import (
     _create_cron_schedule,
     _create_partition_schedule,
     get_schedules,
@@ -76,10 +76,10 @@ def mock_schedule_builders():
 
     with (
         patch(
-            "dagster_vayu.creators.schedule_creator.ScheduleDefinition"
+            "dagster_odp.creators.schedule_creator.ScheduleDefinition"
         ) as mock_schedule_def,
         patch(
-            "dagster_vayu.creators.schedule_creator.build_schedule_from_partitioned_job"
+            "dagster_odp.creators.schedule_creator.build_schedule_from_partitioned_job"
         ) as mock_build,
     ):
         mock_schedule_def.side_effect = lambda **kwargs: create_schedule_mock(
@@ -113,7 +113,7 @@ def test_create_partition_schedule():
     job_def = Mock(spec=UnresolvedAssetJobDefinition)
 
     with patch(
-        "dagster_vayu.creators.schedule_creator.build_schedule_from_partitioned_job"
+        "dagster_odp.creators.schedule_creator.build_schedule_from_partitioned_job"
     ) as mock_build:
         _create_partition_schedule(trigger_id, params, job_def)
         mock_build.assert_called_once_with(name="test_partition", job=job_def)
@@ -141,4 +141,4 @@ def test_get_schedules_job_not_found(mock_workflow_builder):
     job_defs = [job2]
 
     with pytest.raises(ValueError, match="Job job1 for partition schedules not found."):
-        get_schedules(mock_workflow_builder, job_defs)
+        get_schedules(mock_workflow_builder, job_defs)  # type: ignore

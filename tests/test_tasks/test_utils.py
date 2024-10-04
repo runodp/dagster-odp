@@ -1,7 +1,7 @@
 from google.cloud.bigquery import SchemaField
 from google.cloud.bigquery.table import TimePartitioning
 
-from dagster_vayu.tasks.utils import replace_bq_job_params
+from dagster_odp.tasks.utils import replace_bq_job_params
 
 
 def test_replace_bq_job_params():

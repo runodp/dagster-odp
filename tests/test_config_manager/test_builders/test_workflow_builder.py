@@ -3,8 +3,8 @@ import json
 import pytest
 import yaml
 
-from dagster_vayu.config_manager.builders.workflow_builder import WorkflowBuilder
-from dagster_vayu.config_manager.models.workflow_model import (
+from dagster_odp.config_manager.builders.workflow_builder import WorkflowBuilder
+from dagster_odp.config_manager.models.workflow_model import (
     DBTTask,
     DLTTask,
     GenericTask,

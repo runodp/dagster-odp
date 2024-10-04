@@ -4,7 +4,7 @@ import pytest
 from dagster import RunRequest, SensorEvaluationContext, SkipReason
 from dagster_gcp import GCSResource
 
-from dagster_vayu.sensors.definitions.gcs_sensor import GCSSensor
+from dagster_odp.sensors.definitions.gcs_sensor import GCSSensor
 
 
 @pytest.fixture
@@ -21,7 +21,7 @@ def mock_context(mock_gcs_resource):
     return context
 
 
-@patch("dagster_vayu.sensors.definitions.gcs_sensor.get_gcs_keys")
+@patch("dagster_odp.sensors.definitions.gcs_sensor.get_gcs_keys")
 def test_gcs_sensor_no_new_objects(mock_get_gcs_keys, mock_context):
     mock_get_gcs_keys.return_value = []
 
@@ -40,7 +40,7 @@ def test_gcs_sensor_no_new_objects(mock_get_gcs_keys, mock_context):
     mock_context.update_cursor.assert_not_called()
 
 
-@patch("dagster_vayu.sensors.definitions.gcs_sensor.get_gcs_keys")
+@patch("dagster_odp.sensors.definitions.gcs_sensor.get_gcs_keys")
 def test_gcs_sensor_new_objects_no_filter(mock_get_gcs_keys, mock_context):
     mock_get_gcs_keys.return_value = ["object1", "object2"]
     sensor = GCSSensor(bucket_name="test-bucket")
@@ -59,7 +59,7 @@ def test_gcs_sensor_new_objects_no_filter(mock_get_gcs_keys, mock_context):
     mock_context.update_cursor.assert_called_with("object2")
 
 
-@patch("dagster_vayu.sensors.definitions.gcs_sensor.get_gcs_keys")
+@patch("dagster_odp.sensors.definitions.gcs_sensor.get_gcs_keys")
 def test_gcs_sensor_new_objects_with_filter(mock_get_gcs_keys, mock_context):
     mock_get_gcs_keys.return_value = [
         "prefix/object1",
@@ -74,7 +74,7 @@ def test_gcs_sensor_new_objects_with_filter(mock_get_gcs_keys, mock_context):
     assert [r.run_key for r in result] == ["prefix/object1", "prefix/object2"]
 
 
-@patch("dagster_vayu.sensors.definitions.gcs_sensor.get_gcs_keys")
+@patch("dagster_odp.sensors.definitions.gcs_sensor.get_gcs_keys")
 def test_gcs_sensor_cursor_usage(mock_get_gcs_keys, mock_context):
     mock_context.cursor = "last_object"
     mock_get_gcs_keys.return_value = []  # Simulating no new objects

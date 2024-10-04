@@ -3,7 +3,7 @@ from unittest.mock import Mock
 import duckdb
 import pytest
 
-from dagster_vayu.resources.definitions import DuckDbResource
+from dagster_odp.resources.definitions import DuckDbResource
 
 
 def test_duckdb_resource_get_connection_valid_path(tmp_path):
@@ -18,7 +18,7 @@ def test_duckdb_resource_get_connection_valid_path(tmp_path):
 
         # Optionally, perform a simple query to ensure the connection works
         result = conn.execute("SELECT 1").fetchone()
-        assert result[0] == 1
+        assert result[0] == 1  # type: ignore
 
     # Check if the database file was created
     assert db_path.exists()

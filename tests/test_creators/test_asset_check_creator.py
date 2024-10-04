@@ -3,7 +3,7 @@ from unittest.mock import Mock
 import pytest
 from dagster import AssetChecksDefinition, AssetCheckSeverity, TextMetadataValue
 
-from dagster_vayu.creators.asset_check_creator import (
+from dagster_odp.creators.asset_check_creator import (
     _get_asset_check_def,
     _get_check_result,
     get_asset_checks,

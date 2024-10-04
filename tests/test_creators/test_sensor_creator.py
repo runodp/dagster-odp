@@ -4,13 +4,13 @@ import pytest
 from dagster import SensorDefinition
 from dagster._core.definitions.sensor_definition import DefaultSensorStatus
 
-from dagster_vayu.config_manager.builders.workflow_builder import WorkflowBuilder
-from dagster_vayu.config_manager.models.workflow_model import (
+from dagster_odp.config_manager.builders.workflow_builder import WorkflowBuilder
+from dagster_odp.config_manager.models.workflow_model import (
     GenericSensor,
     SensorTrigger,
 )
-from dagster_vayu.creators.sensor_creator import _get_sensor_def, get_sensors
-from dagster_vayu.sensors.definitions.gcs_sensor import GCSSensor
+from dagster_odp.creators.sensor_creator import _get_sensor_def, get_sensors
+from dagster_odp.sensors.definitions.gcs_sensor import GCSSensor
 
 
 @pytest.fixture
@@ -55,7 +55,7 @@ def test_get_sensor_def():
     )
 
     with patch(
-        "dagster_vayu.creators.sensor_creator.sensor_registry",
+        "dagster_odp.creators.sensor_creator.sensor_registry",
         {"gcs_sensor": {"required_resources": {"gcs"}}},
     ):
         sensor_def = _get_sensor_def("test_job", spec)

@@ -4,7 +4,7 @@ from unittest.mock import Mock, patch
 import pytest
 from soda.scan import Scan
 
-from dagster_vayu.resources.definitions import SodaResource
+from dagster_odp.resources.definitions import SodaResource
 
 
 @pytest.fixture

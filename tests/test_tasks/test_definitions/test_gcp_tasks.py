@@ -3,7 +3,7 @@ from unittest.mock import Mock, patch
 import pytest
 from google.cloud import bigquery as bq
 
-from dagster_vayu.tasks.definitions.gcp_tasks import (
+from dagster_odp.tasks.definitions.gcp_tasks import (
     BQTableToGCS,
     GCSFileDownload,
     GCSFileToBQ,

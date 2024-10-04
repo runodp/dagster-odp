@@ -4,8 +4,8 @@ from unittest.mock import Mock, mock_open, patch
 import pytest
 import yaml
 
-from dagster_vayu.config_manager.models.workflow_model import DBTParams
-from dagster_vayu.creators.asset_creators.dbt_project_manager import DBTProjectManager
+from dagster_odp.config_manager.models.workflow_model import DBTParams
+from dagster_odp.creators.asset_creators.dbt_project_manager import DBTProjectManager
 
 
 @pytest.fixture
@@ -25,7 +25,7 @@ def mock_dbt_asset_defs():
 @pytest.fixture
 def dbt_project_manager(mock_dbt_cli_resource, mock_dbt_asset_defs):
     with patch(
-        "dagster_vayu.creators.asset_creators.dbt_project_manager.DBTProjectManager._load_dbt_manifest_path"
+        "dagster_odp.creators.asset_creators.dbt_project_manager.DBTProjectManager._load_dbt_manifest_path"
     ):
         manager = DBTProjectManager(mock_dbt_cli_resource, mock_dbt_asset_defs)
         manager._dbt_manifest_path = Path("/path/to/dbt_project/target/manifest.json")

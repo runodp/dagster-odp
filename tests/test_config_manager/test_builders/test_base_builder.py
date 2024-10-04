@@ -3,7 +3,7 @@ import json
 import pytest
 import yaml
 
-from dagster_vayu.config_manager.builders.base_builder import BaseBuilder
+from dagster_odp.config_manager.builders.base_builder import BaseBuilder
 
 
 class ConcreteBuilder(BaseBuilder):

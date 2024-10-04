@@ -4,8 +4,8 @@ import pytest
 import yaml
 from dagster import AssetsDefinition
 
-from dagster_vayu.config_manager.models.workflow_model import DLTParams, DLTTask
-from dagster_vayu.creators.asset_creators.dlt_asset_creator import DLTAssetCreator
+from dagster_odp.config_manager.models.workflow_model import DLTParams, DLTTask
+from dagster_odp.creators.asset_creators.dlt_asset_creator import DLTAssetCreator
 
 
 @pytest.fixture
@@ -43,11 +43,11 @@ def mock_config_builder():
 def dlt_asset_creator(mock_workflow_builder, mock_config_builder):
     with (
         patch(
-            "dagster_vayu.creators.asset_creators.base_asset_creator.WorkflowBuilder",
+            "dagster_odp.creators.asset_creators.base_asset_creator.WorkflowBuilder",
             return_value=mock_workflow_builder,
         ),
         patch(
-            "dagster_vayu.creators.asset_creators.base_asset_creator.ConfigBuilder",
+            "dagster_odp.creators.asset_creators.base_asset_creator.ConfigBuilder",
             return_value=mock_config_builder,
         ),
     ):
@@ -97,7 +97,7 @@ def test_get_dlt_destination_objects_invalid_schema(
         )
 
 
-@patch("dagster_vayu.creators.asset_creators.dlt_asset_creator.multi_asset")
+@patch("dagster_odp.creators.asset_creators.dlt_asset_creator.multi_asset")
 @patch.object(DLTAssetCreator, "_get_dlt_destination_objects")
 def test_build_asset(
     mock_get_dlt_destination_objects, mock_multi_asset, dlt_asset_creator
@@ -134,9 +134,7 @@ def test_build_asset(
     assert callable(result)
 
 
-@patch(
-    "dagster_vayu.creators.asset_creators.dlt_asset_creator.external_asset_from_spec"
-)
+@patch("dagster_odp.creators.asset_creators.dlt_asset_creator.external_asset_from_spec")
 @patch.object(DLTAssetCreator, "_build_asset")
 def test_get_assets(mock_build_asset, mock_external_asset_from_spec, dlt_asset_creator):
     dlt_asset_creator._wb.get_assets_with_task_type.return_value = [

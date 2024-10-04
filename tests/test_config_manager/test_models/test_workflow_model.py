@@ -1,7 +1,7 @@
 import pytest
 from pydantic import ValidationError
 
-from dagster_vayu.config_manager.models.workflow_model import (
+from dagster_odp.config_manager.models.workflow_model import (
     DLTParams,
     DLTTask,
     ScheduleCronParams,

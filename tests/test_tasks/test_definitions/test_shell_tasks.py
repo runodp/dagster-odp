@@ -2,7 +2,7 @@ from unittest.mock import Mock, patch
 
 from dagster import AssetExecutionContext
 
-from dagster_vayu.tasks.definitions import ShellCommand
+from dagster_odp.tasks.definitions import ShellCommand
 
 
 def test_shell_command():

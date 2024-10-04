@@ -6,9 +6,9 @@ from dagster._core.definitions.unresolved_asset_job_definition import (
     UnresolvedAssetJobDefinition,
 )
 
-from dagster_vayu.config_manager.builders.workflow_builder import WorkflowBuilder
-from dagster_vayu.config_manager.models.workflow_model import WorkflowJob
-from dagster_vayu.creators.job_creator import get_jobs
+from dagster_odp.config_manager.builders.workflow_builder import WorkflowBuilder
+from dagster_odp.config_manager.models.workflow_model import WorkflowJob
+from dagster_odp.creators.job_creator import get_jobs
 
 
 @pytest.fixture
@@ -33,8 +33,8 @@ def test_get_jobs(mock_workflow_builder):
     assert jobs[1].name == "test_job_2"
 
 
-@patch("dagster_vayu.creators.job_creator.AssetSelection.from_coercible")
-@patch("dagster_vayu.creators.job_creator.define_asset_job")
+@patch("dagster_odp.creators.job_creator.AssetSelection.from_coercible")
+@patch("dagster_odp.creators.job_creator.define_asset_job")
 def test_job_creation_details(
     mock_define_asset_job, mock_from_coercible, mock_workflow_builder
 ):

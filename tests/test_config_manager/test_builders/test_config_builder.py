@@ -2,8 +2,8 @@ import json
 
 import pytest
 
-from dagster_vayu.config_manager.builders.config_builder import ConfigBuilder
-from dagster_vayu.config_manager.models.config_model import DagsterConfig
+from dagster_odp.config_manager.builders.config_builder import ConfigBuilder
+from dagster_odp.config_manager.models.config_model import DagsterConfig
 
 
 @pytest.fixture

@@ -4,7 +4,7 @@ from pathlib import Path
 import duckdb
 import pytest
 
-from dagster_vayu.tasks.definitions.duckdb_tasks import (
+from dagster_odp.tasks.definitions.duckdb_tasks import (
     DuckDbQuery,
     DuckDbTableToFile,
     FileToDuckDb,

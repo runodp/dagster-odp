@@ -5,7 +5,7 @@ import pytest
 from dagster import AssetExecutionContext, DagsterInvariantViolationError
 from freezegun import freeze_time
 
-from dagster_vayu.utils import ConfigParamReplacer, has_partition_def
+from dagster_odp.utils import ConfigParamReplacer, has_partition_def
 
 
 @pytest.fixture
@@ -73,7 +73,7 @@ class TestConfigParamReplacer:
         }
 
     @freeze_time("2023-05-17T10:30:00")
-    @patch("dagster_vayu.utils.ConfigParamReplacer._get_materialization")
+    @patch("dagster_odp.utils.ConfigParamReplacer._get_materialization")
     def test_replace(self, mock_get_materialization, config_replacer):
         mock_get_materialization.return_value = Mock(
             metadata={"parent_key": Mock(text="parent_value")}
@@ -105,7 +105,7 @@ class TestConfigParamReplacer:
 
         assert result == expected
 
-    @patch("dagster_vayu.utils.ConfigParamReplacer._get_materialization")
+    @patch("dagster_odp.utils.ConfigParamReplacer._get_materialization")
     def test_add_parent_materializations(
         self, mock_get_materialization, config_replacer
     ):
@@ -126,13 +126,13 @@ class TestConfigParamReplacer:
         mock_instance.get_event_records.return_value = [mock_event]
         mock_context.instance = mock_instance
 
-        with patch("dagster_vayu.utils.has_partition_def", return_value=True):
+        with patch("dagster_odp.utils.has_partition_def", return_value=True):
             result = config_replacer._get_materialization(
                 mock_instance, "parent_asset", "parent_asset"
             )
         assert result == mock_event.asset_materialization
 
-        with patch("dagster_vayu.utils.has_partition_def", return_value=False):
+        with patch("dagster_odp.utils.has_partition_def", return_value=False):
             mock_instance.get_latest_materialization_event.return_value = mock_event
             result = config_replacer._get_materialization(
                 mock_instance, "parent_asset", "parent_asset"

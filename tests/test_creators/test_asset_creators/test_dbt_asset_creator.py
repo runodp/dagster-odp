@@ -11,13 +11,13 @@ from dagster import (
 from dagster._core.definitions.partition import ScheduleType
 from dagster_dbt import DbtCliEventMessage
 
-from dagster_vayu.config_manager.models.workflow_model import (
+from dagster_odp.config_manager.models.workflow_model import (
     DBTParams,
     DBTTask,
     DBTTaskParams,
     PartitionParams,
 )
-from dagster_vayu.creators.asset_creators.dbt_asset_creator import (
+from dagster_odp.creators.asset_creators.dbt_asset_creator import (
     CustomDagsterDbtTranslator,
     DBTAssetCreator,
 )
@@ -90,15 +90,15 @@ def dbt_asset_creator(
 ):
     with (
         patch(
-            "dagster_vayu.creators.asset_creators.base_asset_creator.WorkflowBuilder",
+            "dagster_odp.creators.asset_creators.base_asset_creator.WorkflowBuilder",
             return_value=mock_workflow_builder,
         ),
         patch(
-            "dagster_vayu.creators.asset_creators.base_asset_creator.ConfigBuilder",
+            "dagster_odp.creators.asset_creators.base_asset_creator.ConfigBuilder",
             return_value=mock_config_builder,
         ),
         patch(
-            "dagster_vayu.creators.asset_creators.dbt_asset_creator.DBTProjectManager",
+            "dagster_odp.creators.asset_creators.dbt_asset_creator.DBTProjectManager",
             return_value=mock_dbt_project_manager,
         ),
     ):
@@ -128,7 +128,7 @@ def test_custom_dagster_dbt_translator_get_metadata():
     ],
 )
 @patch(
-    "dagster_vayu.creators.asset_creators.dbt_asset_creator.external_assets_from_specs"
+    "dagster_odp.creators.asset_creators.dbt_asset_creator.external_assets_from_specs"
 )
 def test_build_dbt_external_sources(
     mock_external_assets, external_value, should_include, dbt_asset_creator
@@ -168,7 +168,7 @@ def test_get_dbt_output_metadata(dbt_asset_creator):
     assert metadata == {"destination_table_id": "test_schema.test_alias"}
 
 
-@patch("dagster_vayu.creators.asset_creators.dbt_asset_creator.json.dumps")
+@patch("dagster_odp.creators.asset_creators.dbt_asset_creator.json.dumps")
 def test_materialize_dbt_asset(mock_json_dumps, dbt_asset_creator):
     mock_context = Mock(spec=AssetExecutionContext)
     mock_dbt = Mock()
@@ -202,9 +202,9 @@ def test_materialize_dbt_asset(mock_json_dumps, dbt_asset_creator):
     assert result == [mock_output]
 
 
-@patch("dagster_vayu.creators.asset_creators.dbt_asset_creator.dbt_assets")
+@patch("dagster_odp.creators.asset_creators.dbt_asset_creator.dbt_assets")
 @patch(
-    "dagster_vayu.creators.asset_creators.dbt_asset_creator.generate_partition_params"
+    "dagster_odp.creators.asset_creators.dbt_asset_creator.generate_partition_params"
 )
 def test_build_asset(
     mock_generate_partition_params, mock_dbt_assets, dbt_asset_creator

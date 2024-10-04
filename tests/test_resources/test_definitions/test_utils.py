@@ -2,10 +2,10 @@ from unittest.mock import Mock, patch
 
 from dagster import AssetExecutionContext
 
-from dagster_vayu.resources.definitions.utils import update_asset_params
+from dagster_odp.resources.definitions.utils import update_asset_params
 
 
-@patch("dagster_vayu.resources.definitions.utils.ConfigParamReplacer")
+@patch("dagster_odp.resources.definitions.utils.ConfigParamReplacer")
 def test_update_asset_params(MockConfigParamReplacer):
     # Setup
     mock_context = Mock(spec=AssetExecutionContext)
