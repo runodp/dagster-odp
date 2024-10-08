@@ -1,1 +1,21 @@
-site_name: My Docs
+site_name: Dagster ODP
+site_url: https://mydomain.org/docs
+theme:
+  name: material
+nav:
+  - Getting Started:
+    - Overview: getting-started/overview.md
+    - Quickstart: getting-started/quickstart.md
+    - Installation: getting-started/installation.md
+  - Tutorials: tutorials.md
+  - Concepts:
+    - Overview: concepts/concepts.md
+    - Workflow config: concepts/workflow_config.md
+    - Dagster config: concepts/dagster_config.md
+    - Tasks: concepts/tasks.md
+    - Resources: concepts/resources.md
+    - Sensors: concepts/sensors.md
+  - Reference:
+    - Overview: reference/reference.md
+    - Workflows: reference/workflows.md
+    - Dagster Config: reference/dagster_config.md
