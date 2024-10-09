@@ -17,16 +17,15 @@ Dagster ODP is ideal for data teams looking to streamline their pipeline develop
 If you're new to Dagster ODP, we recommend starting with the following resources:
 
 - [Overview](getting-started/overview.md): Learn about the core concepts and benefits of Dagster ODP
-- [Quickstart](quickstart.md): Set up your first ODP pipeline in minutes
-- [Installation](installation.md): Detailed instructions for installing Dagster ODP
+- [Quickstart](getting-started/quickstart.md): Set up your first ODP pipeline in minutes
 
 ## Dive Deeper
 
 Once you're familiar with the basics, explore these areas to make the most of Dagster ODP:
 
-- [Tutorials](tutorials.md): Practical guides to help you build progressively complex pipelines and understand ODP's features in real-world scenarios.
-- [Concepts](concepts.md): Deepen your understanding of Dagster ODP's fundamental ideas.
-- [Reference](reference.md): Comprehensive details on all features and configurations.
+- [Tutorials](tutorials/tutorials.md): Practical guides to help you build progressively complex pipelines and understand ODP's features in real-world scenarios.
+- [Concepts](concepts/concepts.md): Deepen your understanding of Dagster ODP's fundamental ideas.
+- [Reference](reference/reference.md): Comprehensive details on all features and configurations.
 
 ## Community and Support
 

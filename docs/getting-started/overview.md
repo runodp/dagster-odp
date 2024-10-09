@@ -1,13 +1,15 @@
 # Overview of Dagster ODP
 
+Dagster ODP (Open Data Platform) extends Dagster's capabilities by providing a configuration-driven approach to building data pipelines. It's designed to streamline pipeline development and management for teams already using or familiar with Dagster.
+
 ## What is Dagster ODP?
 
-At its core, Dagster ODP translates user-defined configurations into Dagster primitives such as assets, resources, sensors, schedules, partitions, and asset checks. This abstraction allows for:
+Dagster ODP acts as an abstraction layer, translating user-defined configurations into Dagster primitives such as assets, resources, sensors, schedules, partitions, and asset checks. This approach offers several advantages:
 
-1. **No-code pipeline creation**: Data analysts and scientists can create pipelines using pre-defined or custom tasks without writing Python code.
-2. **Declarative pipeline definitions**: Separate pipeline logic from task implementation, allowing for easier maintenance and iteration.
-3. **Task reusability**: Define tasks once and use them across multiple pipelines.
-4. **Integration with popular tools**: Built-in support for tools like DLT for data ingestion and Soda for data quality checks.
+1. **Configuration-driven pipeline creation**: Data analysts and scientists can create pipelines using pre-defined or custom tasks through YAML configuration, reducing the need for direct Python coding.
+2. **Declarative pipeline definitions**: ODP separates pipeline logic from task implementation, facilitating easier maintenance and iteration of data workflows.
+3. **Task reusability**: Tasks can be defined once and reused across multiple pipelines, promoting code efficiency and standardization.
+4. **Integration with popular tools**: ODP provides built-in support for popular data tools, including DLT for data ingestion and Soda for data quality checks.
 
 ## Building pipelines with ODP
 
@@ -61,7 +63,7 @@ ODP comes with a variety of pre-built components, with more on the way, to accel
 
 ### 3. Create Custom Tasks
 
-While ODP provides many pre-built components, it also allows data engineers to create custom tasks for specific needs. Here's an example of a custom task for data anonymization:
+While ODP provides many pre-built components, it also allows data engineers to create custom tasks for specific needs. Here's how you would write a custom task to anonymize data:
 
 ```python
 from dagster_odp.tasks.manager import BaseTask, odp_task
@@ -110,4 +112,4 @@ As your data needs grow, ODP allows you to easily extend functionality through c
 
 ## Next Steps
 
-Now that you're familiar with Dagster ODP's concepts and benefits, you're ready to start building your first pipeline. Check out our [Quickstart Guide](getting-started/quickstart) to get started, the [Tutorials](tutorials.md) for more advanced real-world use cases, or dive into the Concepts section for a deeper understanding of ODP's components.
+Now that you're familiar with Dagster ODP's concepts and benefits, you're ready to start building your first pipeline. Check out our [Quickstart Guide](./quickstart.md) to get started, the [Tutorials](../tutorials/tutorials.md) for more advanced real-world use cases, or dive into the Concepts section for a deeper understanding of ODP's components.

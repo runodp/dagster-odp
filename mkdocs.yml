@@ -6,7 +6,6 @@ nav:
   - Getting Started:
     - Overview: getting-started/overview.md
     - Quickstart: getting-started/quickstart.md
-    - Installation: getting-started/installation.md
   - Tutorials: tutorials.md
   - Concepts:
     - Overview: concepts/concepts.md

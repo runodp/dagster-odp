@@ -39,6 +39,3 @@ dev = [
     "freezegun",
     "mkdocs-material"
 ]
-
-[tool.setuptools]
-packages = ["dagster_odp"]
