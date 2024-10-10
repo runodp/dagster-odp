@@ -35,7 +35,7 @@ mkdir -p odp_config/workflows
 
 Now, create a file named `hello_world.yaml` in the `odp_config/workflows` directory with the following content:
 
-```yaml
+```yaml title="hello_world.yaml"
 assets:
   - asset_key: hello_world
     task_type: shell_command
@@ -50,7 +50,7 @@ This defines an asset that runs a shell command to echo our greeting.
 
 Replace the boilerplate code in `definitions.py` within the `my_dagster_odp_project` directory with the following content:
 
-```python
+```python title="definitions.py"
 from dagster_odp import build_definitions
 
 defs = build_definitions("odp_config")
