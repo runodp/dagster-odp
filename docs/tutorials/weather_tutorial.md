@@ -177,10 +177,10 @@ Let's break down this configuration, looking at both the pipeline logic and the 
 
 2. **Pipeline Logic**:
 
-    * **Data Ingestion**: The first two assets, `raw_weather_data` and `raw_country_data`, use our custom `url_file_download` task to fetch our raw data from URLs. This allows us to start with data stored online and bring it locally for processing.
-    * **Data Loading**: Next, we load the downloaded files into DuckDB tables using the `file_to_duckdb` task. This prepares our data for efficient querying and aggregation.
-    * **Data Transformation**: The `aggregated_weather_data` asset uses a SQL query (which we'll define next) to join and aggregate our data within DuckDB.
-    * **Data Export**: Finally, we export our results to a Parquet file using the `duckdb_table_to_file` task.
+  * **Data Ingestion**: The first two assets, `raw_weather_data` and `raw_country_data`, use our custom `url_file_download` task to fetch our raw data from URLs. This allows us to start with data stored online and bring it locally for processing.
+  * **Data Loading**: Next, we load the downloaded files into DuckDB tables using the `file_to_duckdb` task. This prepares our data for efficient querying and aggregation.
+  * **Data Transformation**: The `aggregated_weather_data` asset uses a SQL query (which we'll define next) to join and aggregate our data within DuckDB.
+  * **Data Export**: Finally, we export our results to a Parquet file using the `duckdb_table_to_file` task.
 
 3. **Group Name and Description**: The `group_name` and `description` fields are standard Dagster concepts that ODP passes through to the Dagster asset definitions. They help organize and document your assets.
 
