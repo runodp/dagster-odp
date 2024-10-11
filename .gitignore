@@ -165,4 +165,3 @@ cython_debug/
 .DS_Store
 .dlt/
 .vscode
-*.svg

@@ -190,6 +190,10 @@ Let's break down this configuration, looking at both the pipeline logic and the 
 
 This configuration creates a pipeline that downloads weather and country data, loads it into DuckDB, performs aggregations, and exports the results - with minimal Python code required for the pipeline itself.
 
+Once you've completed all the setup steps and run your pipeline, you'll be able to see your job in the Dagster UI, looking something like this:
+
+![Weather Analysis Job in Dagster UI](../assets/Job_weather_analysis.svg)
+
 ## Step 5: Create the SQL Query
 
 Create a file `odp_config/aggregate_weather.sql` with the following content:

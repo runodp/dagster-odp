@@ -4,6 +4,8 @@ theme:
   name: material
   features:
     - content.code.copy
+plugins:
+  - glightbox
 markdown_extensions:
   - pymdownx.superfences:
       custom_fences:
