@@ -1,6 +1,6 @@
 from .duckdb_tasks import DuckDbQuery, DuckDbTableToFile, FileToDuckDb
 from .gcp_tasks import BQTableToGCS, GCSFileToBQ
-from .shell_tasks import ShellCommand
+from .util_tasks import ShellCommand
 
 __all__ = [
     "FileToDuckDb",
