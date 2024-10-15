@@ -21,6 +21,7 @@ def sample_dlt_task():
         asset_key="test/abc/dlt_asset",
         task_type="dlt",
         params=DLTParams(
+            schema_file_path="schemas/export/test_function.schema.yaml",
             source_module="top_module.test_module.test_function",
             source_params={"source_param": "value"},
             destination="bigquery",
@@ -34,7 +35,6 @@ def sample_dlt_task():
 def mock_load_info():
     load_info = Mock(spec=LoadInfo)
     load_info.asdict.return_value = {
-        "first_run": True,
         "started_at": "2023-05-17T12:00:00",
         "finished_at": "2023-05-17T12:05:00",
         "dataset_name": "test_dataset",
@@ -45,17 +45,20 @@ def mock_load_info():
     return load_info
 
 
-def test_get_source_func(odp_dlt_resource):
+def test_get_source(odp_dlt_resource):
     with patch("importlib.import_module") as mock_importlib:
         mock_module = Mock()
         mock_func = Mock()
         mock_module.test_function = mock_func
         mock_importlib.return_value = mock_module
 
-        result = odp_dlt_resource._get_source_func("test_module", "test_function")
+        result = odp_dlt_resource._get_source(
+            "test_module.test_function", {"param": "value"}
+        )
 
-        assert result == mock_func
+        assert result == mock_func.return_value
         mock_importlib.assert_called_once_with("test_module")
+        mock_func.assert_called_once_with(param="value")
 
 
 def test_cast_load_info_metadata(odp_dlt_resource):
@@ -77,52 +80,59 @@ def test_cast_load_info_metadata(odp_dlt_resource):
 
 
 @pytest.mark.parametrize(
-    "destination_name, expected_key, expected_value",
+    "destination_name, dataset_name, expected_key, expected_value",
     [
-        ("bigquery", "destination_table_id", "test_dataset.test_asset"),
+        ("bigquery", "test_dataset", "destination_table_id", "test_dataset.test_asset"),
+        ("duckdb", "test_dataset", "destination_table_id", "test_dataset.test_asset"),
         (
             "filesystem",
+            "test_dataset",
             "destination_file_uri",
             "gs://test-bucket/test_dataset/test_asset",
+        ),
+        (
+            "filesystem",
+            None,
+            None,
+            None,
         ),
     ],
 )
 def test_extract_dlt_metadata(
-    odp_dlt_resource, mock_load_info, destination_name, expected_key, expected_value
+    odp_dlt_resource,
+    mock_load_info,
+    destination_name,
+    dataset_name,
+    expected_key,
+    expected_value,
 ):
-    mock_load_info.asdict.return_value["destination_name"] = destination_name
-    result = odp_dlt_resource.extract_dlt_metadata(mock_load_info, "test_asset")
-    assert result[expected_key] == expected_value
-    expected_base_keys = {
-        "first_run",
-        "started_at",
-        "finished_at",
-        "dataset_name",
-        "destination_name",
-        "destination_type",
+    mock_load_info_dict = {
+        "started_at": "2023-05-17T12:00:00",
+        "finished_at": "2023-05-17T12:05:00",
+        "destination_name": destination_name,
+        "destination_type": destination_name,
+        "destination_displayable_credentials": "gs://test-bucket",
     }
-    assert all(key in result for key in expected_base_keys)
+    mock_load_info_dict["dataset_name"] = dataset_name if dataset_name else None
 
+    mock_load_info.asdict.return_value = mock_load_info_dict
 
-def test_extract_dlt_metadata_unsupported_destination(odp_dlt_resource, mock_load_info):
-    mock_load_info.asdict.return_value["destination_name"] = "unsupported"
-    with pytest.raises(ValueError, match="Unsupported destination: unsupported"):
-        odp_dlt_resource.extract_dlt_metadata(mock_load_info, "test_asset")
+    result = odp_dlt_resource.extract_dlt_metadata(mock_load_info, "test_asset")
+
+    if dataset_name is not None:
+        assert result[expected_key] == expected_value
+    else:
+        assert "destination_file_uri" not in result
 
 
 def test_materialize_dlt_results(odp_dlt_resource, mock_load_info):
-    op_name = "test_op"
-    dlt_asset_names = {
-        op_name: [
-            ["test_op", "table1"],
-            ["test_op", "table2"],
-        ]
-    }
+    dlt_asset_names = [
+        ["test_op", "table1"],
+        ["test_op", "table2"],
+    ]
 
     results = list(
-        odp_dlt_resource.materialize_dlt_results(
-            op_name, mock_load_info, dlt_asset_names
-        )
+        odp_dlt_resource.materialize_dlt_results(mock_load_info, dlt_asset_names)
     )
 
     assert len(results) == 2
@@ -152,9 +162,11 @@ def test_write_dlt_secrets_to_env(
         "section2": {"key3": "value3"},
     }
 
-    odp_dlt_resource._write_dlt_secrets_to_env("test_module")
+    odp_dlt_resource._write_dlt_secrets_to_env(
+        "test_directory.test_module.test_function"
+    )
 
-    expected_file_path = "/path/to/dlt_project/test_module/.dlt/secrets.toml"
+    expected_file_path = "/path/to/dlt_project/test_directory/.dlt/secrets.toml"
     mock_exists.assert_called_once_with(expected_file_path)
     mock_open.assert_called_once_with(expected_file_path, "rb")
     assert os.environ == {

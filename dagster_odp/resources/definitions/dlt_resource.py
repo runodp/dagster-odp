@@ -2,7 +2,7 @@ import importlib
 import os
 import sys
 import tomllib
-from typing import Any, Callable, Dict, Iterator, List, Mapping, Union
+from typing import Any, Dict, Iterator, List, Mapping, Union
 
 from dagster import (
     AssetExecutionContext,
@@ -12,8 +12,7 @@ from dagster import (
 )
 from dlt import destinations, pipeline
 from dlt.common.pipeline import LoadInfo
-
-from dagster_odp.config_manager.models.workflow_model import DLTTask
+from dlt.extract.source import DltSource
 
 from ..resource_registry import odp_resource
 from .utils import update_asset_params
@@ -33,11 +32,12 @@ class OdpDltResource(ConfigurableResource):
 
     project_dir: str
 
-    def _get_source_func(self, source_module: str, source_func_name: str) -> Callable:
+    def _get_source(self, source_module: str, source_params: Dict) -> DltSource:
         sys.path.append(self.project_dir)
+        source_module, source_func_name = source_module.rsplit(".", 1)
         module = importlib.import_module(source_module)
         source_func = getattr(module, source_func_name)
-        return source_func
+        return source_func(**source_params)
 
     def _cast_load_info_metadata(self, mapping: Mapping[Any, Any]) -> Mapping[Any, Any]:
         """Converts pendulum DateTime and Timezone values in a mapping to strings.
@@ -94,7 +94,6 @@ class OdpDltResource(ConfigurableResource):
             ValueError: If the destination is not supported.
         """
         dlt_base_metadata_types = {
-            "first_run",
             "started_at",
             "finished_at",
             "dataset_name",
@@ -108,41 +107,37 @@ class OdpDltResource(ConfigurableResource):
             k: v for k, v in load_info_dict.items() if k in dlt_base_metadata_types
         }
 
-        if base_metadata["destination_name"] == "bigquery":
+        if base_metadata["destination_name"] in ["bigquery", "duckdb"]:
             base_metadata["destination_table_id"] = (
                 f"{base_metadata['dataset_name']}.{asset_name}"
             )
-        elif base_metadata["destination_name"] == "filesystem":
+        if base_metadata["destination_name"] == "filesystem":
             bucket_url = load_info_dict["destination_displayable_credentials"]
-            base_metadata["destination_file_uri"] = os.path.join(
-                bucket_url, base_metadata["dataset_name"], asset_name
-            )
-        else:
-            raise ValueError(
-                f"Unsupported destination: {base_metadata['destination_name']}"
-            )
 
+            # When DLT does not ingest new data in a run, the dataset_name is None.
+            if base_metadata["dataset_name"]:
+                base_metadata["destination_file_uri"] = os.path.join(
+                    bucket_url, base_metadata["dataset_name"], asset_name
+                )
         return base_metadata
 
     def materialize_dlt_results(
         self,
-        op_name: str,
         load_info: LoadInfo,
-        dlt_asset_names: Dict[str, List[List[str]]],
+        dlt_asset_names: List[List[str]],
     ) -> Iterator[MaterializeResult]:
         """
-        Generates MaterializeResult objects for DLT assets.
+        Materializes DLT assets with the metadata in the LoadInfo object.
 
         Args:
-            op_name (str): The name of the op.
-            load_info (LoadInfo): The LoadInfo object from the pipeline run.
-            dlt_asset_names (Dict[str, List[List[str]]]): A dictionary mapping
-                op names to lists of asset names.
+            load_info (LoadInfo): The LoadInfo object from the completed DLT run.
+            dlt_asset_names (List[List[str]]): A list of asset key components for each
+                                               object produced by DLT.
 
         Yields:
             Iterator[MaterializeResult]
         """
-        for asset_name in dlt_asset_names[op_name]:
+        for asset_name in dlt_asset_names:
             yield MaterializeResult(
                 asset_key=AssetKey(asset_name),
                 metadata=self.extract_dlt_metadata(load_info, asset_name[-1]),
@@ -158,10 +153,12 @@ class OdpDltResource(ConfigurableResource):
                 items.append((new_key, v))
         return dict(items)
 
-    def _write_dlt_secrets_to_env(self, module_name: str) -> None:
+    def _write_dlt_secrets_to_env(self, source_module: str) -> None:
+        source_module_path = "/".join(source_module.split(".")[:-2])
+
         # Read the TOML file
         secrets_path = os.path.join(
-            self.project_dir, module_name, ".dlt", "secrets.toml"
+            self.project_dir, source_module_path, ".dlt", "secrets.toml"
         )
         if not os.path.exists(secrets_path):
             raise FileNotFoundError(f"File not found: {secrets_path}")
@@ -198,40 +195,43 @@ class OdpDltResource(ConfigurableResource):
     def run(
         self,
         params: Dict[str, Any],
-        dlt_asset: DLTTask,
-        dlt_asset_names: Dict[str, List[List[str]]],
+        asset_key: str,
+        dlt_asset_names: List[List[str]],
     ) -> Iterator[MaterializeResult]:
         """
-        Runs a DLT pipeline for the given asset.
+        Executes a DLT pipeline for the given asset configuration.
 
-        This method sets up and executes a DLT pipeline, handling the necessary
-        configurations and yielding MaterializeResult objects for the assets.
+        Sets up and runs a DLT pipeline based on the provided parameters,
+        handling configurations and secret management. Yields MaterializeResult
+        objects for the assets produced by the pipeline.
 
         Args:
-            context (AssetExecutionContext): The asset execution context.
-            dlt_asset (DLTTask): The DLT asset to process.
-            dlt_asset_names (Dict[str, List[List[str]]]): A dictionary mapping
-                op names to lists of asset names.
+            params: Configuration for the DLT pipeline (source, destination, etc.)
+            asset_key: DLT asset_key from the config
+            dlt_asset_names: The names of the DLT objects expected to be created
+                             by the pipeline
 
         Yields:
             Iterator[MaterializeResult]
         """
-        source_module, source_func_name = dlt_asset.params.source_module.rsplit(".", 1)
-        source_func = self._get_source_func(source_module, source_func_name)
 
-        op_name, resource_name = dlt_asset.asset_key.rsplit("/", 1)
+        # Write DLT secrets to dagster environment variables.
+        # Creating the source might depend on the secrets.
+        self._write_dlt_secrets_to_env(params["source_module"])
 
-        self._write_dlt_secrets_to_env(source_module.split(".")[0])
+        source = self._get_source(params["source_module"], params["source_params"])
 
-        destination_func = getattr(destinations, dlt_asset.params.destination)
+        resource_name = asset_key.split("/")[-1]
+
+        destination_func = getattr(destinations, params["destination"])
 
         dlt_pipeline = pipeline(
-            pipeline_name=dlt_asset.asset_key.replace("/", "__"),
+            pipeline_name=asset_key.replace("/", "__"),
             destination=destination_func(**params["destination_params"]),
             **params["pipeline_params"],
         )
         load_info = dlt_pipeline.run(
-            source_func(**params["source_params"]).with_resources(resource_name),
+            source.with_resources(resource_name),
             **params["run_params"],
         )
-        yield from self.materialize_dlt_results(op_name, load_info, dlt_asset_names)
+        yield from self.materialize_dlt_results(load_info, dlt_asset_names)

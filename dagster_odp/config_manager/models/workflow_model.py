@@ -55,6 +55,23 @@ class PartitionParams(BaseModel):
     end_offset: Optional[int] = None
     cron_schedule: Optional[str] = None
 
+    @model_validator(mode="after")
+    def validate_schedule(self) -> Self:
+        if self.cron_schedule is not None:
+            if (
+                self.schedule_type is not None
+                or self.minute_offset is not None
+                or self.hour_offset is not None
+                or self.day_offset is not None
+            ):
+                raise ValueError(
+                    "If cron_schedule argument is provided, then schedule_type, "
+                    "minute_offset, hour_offset, and day_offset can't also be provided"
+                )
+        elif self.schedule_type is None:
+            raise ValueError("One of schedule_type and cron_schedule must be provided")
+        return self
+
 
 class WorkflowPartition(BaseModel):
     assets: List[str]
@@ -104,12 +121,13 @@ class WorkflowParams(BaseModel):
 
 
 class DLTParams(WorkflowParams):
+    schema_file_path: str
+    source_module: str
     source_params: Dict[str, Any]
-    pipeline_params: Dict[str, Any] = {}
     destination: str
     destination_params: Dict[str, Any] = {}
+    pipeline_params: Dict[str, Any] = {}
     run_params: Dict[str, Any] = {}
-    source_module: str
 
     @field_validator("pipeline_params")
     @classmethod

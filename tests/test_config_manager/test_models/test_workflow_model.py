@@ -4,6 +4,7 @@ from pydantic import ValidationError
 from dagster_odp.config_manager.models.workflow_model import (
     DLTParams,
     DLTTask,
+    PartitionParams,
     ScheduleCronParams,
     ScheduleCronTrigger,
     WorkflowConfig,
@@ -25,11 +26,40 @@ def test_validate_cron():
         )
 
 
+@pytest.mark.parametrize(
+    "config,expected_error",
+    [
+        ({"schedule_type": "DAILY", "start": "2023-01-01"}, None),
+        ({"cron_schedule": "0 0 * * *", "start": "2023-01-01"}, None),
+        (
+            {"start": "2023-01-01"},
+            "One of schedule_type and cron_schedule must be provided",
+        ),
+        (
+            {
+                "cron_schedule": "0 0 * * *",
+                "schedule_type": "DAILY",
+                "start": "2023-01-01",
+            },
+            "If cron_schedule argument is provided, then schedule_type, minute_offset, "
+            "hour_offset, and day_offset can't also be provided",
+        ),
+    ],
+)
+def test_validate_schedule(config, expected_error):
+    if expected_error is None:
+        assert PartitionParams(**config)
+    else:
+        with pytest.raises(ValidationError, match=expected_error):
+            PartitionParams(**config)
+
+
 def test_validate_dlt_task():
     valid_dlt_task = DLTTask(
         asset_key="valid_dlt_task",
         task_type="dlt",
         params=DLTParams(
+            schema_file_path="schemas/export/test_function.schema.yaml",
             source_module="test_module",
             source_params={},
             destination="bigquery",
@@ -44,6 +74,7 @@ def test_validate_dlt_task():
             asset_key="invalid_dlt_task",
             task_type="dlt",
             params=DLTParams(
+                schema_file_path="schemas/export/test_function.schema.yaml",
                 source_module="test_module",
                 source_params={},
                 destination="bigquery",

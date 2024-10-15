@@ -9,21 +9,26 @@ from dagster_odp.creators.asset_creators.dlt_asset_creator import DLTAssetCreato
 
 
 @pytest.fixture
-def mock_workflow_builder():
+def dlt_task():
+    return DLTTask(
+        asset_key="test/abc/dlt_asset",
+        task_type="dlt",
+        group_name="test_group",
+        params=DLTParams(
+            schema_file_path="schemas/export/test_function.schema.yaml",
+            source_module="test_module.test_function",
+            source_params={},
+            destination="bigquery",
+            destination_params={},
+            pipeline_params={"dataset_name": "test_dataset"},
+        ),
+    )
+
+
+@pytest.fixture
+def mock_workflow_builder(dlt_task):
     mock_wb = Mock()
-    mock_wb.get_assets_with_task_type.return_value = [
-        DLTTask(
-            asset_key="test/dlt_asset",
-            task_type="dlt",
-            params=DLTParams(
-                source_module="test_module",
-                source_params={},
-                destination="bigquery",
-                destination_params={},
-                pipeline_params={"dataset_name": "test_dataset"},
-            ),
-        )
-    ]
+    mock_wb.get_assets_with_task_type.return_value = [dlt_task]
     return mock_wb
 
 
@@ -57,20 +62,24 @@ def dlt_asset_creator(mock_workflow_builder, mock_config_builder):
 def test_get_dlt_destination_objects(dlt_asset_creator, tmpdir):
     schema_content = {
         "tables": {
-            "table1": {"columns": ["col1", "col2"]},
-            "table2": {"columns": ["col3", "col4"]},
-            "_hidden_table": {"columns": ["col5"]},
+            "resource_name_table1": {"columns": ["col1", "col2"]},
+            "resource_name_table2": {"columns": ["col3", "col4"]},
+            "other_table": {"columns": ["col5", "col6"]},
+            "_hidden_table": {"columns": ["col7"]},
         }
     }
-    schema_dir = tmpdir.mkdir("test_module").mkdir("schemas").mkdir("export")
+    schema_dir = tmpdir.mkdir("schemas").mkdir("export")
     schema_file = schema_dir.join("test_function.schema.yaml")
     schema_file.write(yaml.dump(schema_content))
 
     result = dlt_asset_creator._get_dlt_destination_objects(
-        str(tmpdir), "test_module", "test_function"
+        str(tmpdir),
+        "schemas/export/test_function.schema.yaml",
+        "resource_name",
     )
 
-    assert result == ["table1", "table2"]
+    assert result == ["resource_name_table1", "resource_name_table2"]
+    assert "other_table" not in result
     assert "_hidden_table" not in result
 
 
@@ -100,23 +109,17 @@ def test_get_dlt_destination_objects_invalid_schema(
 @patch("dagster_odp.creators.asset_creators.dlt_asset_creator.multi_asset")
 @patch.object(DLTAssetCreator, "_get_dlt_destination_objects")
 def test_build_asset(
-    mock_get_dlt_destination_objects, mock_multi_asset, dlt_asset_creator
+    mock_get_dlt_destination_objects, mock_multi_asset, dlt_asset_creator, dlt_task
 ):
-    mock_get_dlt_destination_objects.return_value = ["table1", "table2"]
+    mock_get_dlt_destination_objects.return_value = [
+        "dlt_asset_table1",
+        "dlt_asset_table2",
+    ]
 
-    dlt_task = DLTTask(
-        asset_key="test/abc/dlt_asset",
-        task_type="dlt",
-        group_name="test_group",
-        params=DLTParams(
-            source_module="test_module.test_function",
-            source_params={},
-            destination="bigquery",
-            destination_params={},
-            pipeline_params={"dataset_name": "test_dataset"},
-        ),
-    )
+    # Create a dictionary for asset_key_partition_map
+    dlt_asset_creator._wb.asset_key_partition_map = {}
 
+    # Test case when asset key is not in partitions
     result = dlt_asset_creator._build_asset(dlt_task, "/path/to/dlt")
 
     mock_multi_asset.assert_called_once()
@@ -126,32 +129,41 @@ def test_build_asset(
     assert kwargs["required_resource_keys"] == {"sensor_context", "dlt"}
     assert kwargs["compute_kind"] == "dlt"
     assert len(kwargs["specs"]) == 2
+    assert kwargs["partitions_def"] is None  # Since the key is not in partitions
 
     mock_get_dlt_destination_objects.assert_called_once_with(
-        "/path/to/dlt", "test_module", "test_function"
+        "/path/to/dlt",
+        "schemas/export/test_function.schema.yaml",
+        "dlt_asset",
     )
 
     assert callable(result)
 
+    # Reset the mock_multi_asset for the next test
+    mock_multi_asset.reset_mock()
+
+    # Test case when asset key is in partitions
+    dlt_asset_creator._wb.asset_key_partition_map[dlt_task.asset_key] = Mock(
+        model_dump=lambda **kwargs: {
+            "start": "2023-01-01",
+            "end": "2023-12-31",
+            "schedule_type": "DAILY",
+        }
+    )
+
+    result = dlt_asset_creator._build_asset(dlt_task, "/path/to/dlt")
+
+    mock_multi_asset.assert_called_once()
+    _, kwargs = mock_multi_asset.call_args
+    assert kwargs["partitions_def"] is not None
+
 
 @patch("dagster_odp.creators.asset_creators.dlt_asset_creator.external_asset_from_spec")
 @patch.object(DLTAssetCreator, "_build_asset")
-def test_get_assets(mock_build_asset, mock_external_asset_from_spec, dlt_asset_creator):
-    dlt_asset_creator._wb.get_assets_with_task_type.return_value = [
-        DLTTask(
-            asset_key="parent/nested_asset",
-            task_type="dlt",
-            group_name="group1",
-            description="Test asset",
-            params=DLTParams(
-                source_module="test_module",
-                source_params={},
-                destination="bigquery",
-                destination_params={},
-                pipeline_params={"dataset_name": "test_dataset"},
-            ),
-        )
-    ]
+def test_get_assets(
+    mock_build_asset, mock_external_asset_from_spec, dlt_asset_creator, dlt_task
+):
+    dlt_asset_creator._wb.get_assets_with_task_type.return_value = [dlt_task]
 
     mock_build_asset.return_value = Mock(spec=AssetsDefinition)
     mock_external_asset_from_spec.return_value = Mock(spec=AssetsDefinition)

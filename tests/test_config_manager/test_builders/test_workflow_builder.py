@@ -53,6 +53,7 @@ SAMPLE_WORKFLOW_CONFIG = {
             "asset_key": "asset3",
             "task_type": "dlt",
             "params": {
+                "schema_file_path": "schemas/export/test_function.schema.yaml",
                 "source_module": "test_module.test_function",
                 "source_params": {},
                 "destination": "bigquery",

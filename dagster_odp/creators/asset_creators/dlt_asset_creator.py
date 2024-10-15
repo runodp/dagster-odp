@@ -8,6 +8,7 @@ from dagster import (
     AssetsDefinition,
     AssetSpec,
     MaterializeResult,
+    TimeWindowPartitionsDefinition,
     external_asset_from_spec,
     multi_asset,
 )
@@ -15,6 +16,7 @@ from dagster import (
 from ...config_manager.models.workflow_model import DLTTask
 from ...resources.definitions.dlt_resource import OdpDltResource
 from .base_asset_creator import BaseAssetCreator
+from .utils import generate_partition_params
 
 
 class DLTAssetCreator(BaseAssetCreator):
@@ -41,19 +43,22 @@ class DLTAssetCreator(BaseAssetCreator):
     def _get_dlt_destination_objects(
         self,
         dlt_path: str,
-        source_module: str,
-        source_func_name: str,
+        schema_file_path: str,
+        resource_name: str,
         schema: Optional[Dict] = None,
     ) -> List[str]:
         if schema is None:
-            source_directory = source_module.split(".")[0]
-            schema_file_name = f"{source_func_name}.schema.yaml"
-            schema_file_path = os.path.join(
-                dlt_path, source_directory, "schemas", "export", schema_file_name
-            )
+            # The schema file name is the DLT source name.
+            # We require the user to provide the schema file path explicitly because:
+            # 1. We can't reliably infer the schema file name from the source method
+            #    name, as some source methods don't have the source name.
+            # 2. We can't initialize the source to get the source name, as the source
+            #    arguments might contain variables that need to be replaced.
+            schema_file_path = os.path.join(dlt_path, schema_file_path)
             if not os.path.exists(schema_file_path):
                 raise FileNotFoundError(
-                    f"Schema file '{schema_file_name}' is missing. Please generate it."
+                    f"Schema file is missing in path '{schema_file_path}'. "
+                    f"Please generate it."
                 )
             with open(schema_file_path, encoding="utf-8") as f:
                 schema = yaml.safe_load(f)
@@ -64,27 +69,42 @@ class DLTAssetCreator(BaseAssetCreator):
         return [
             table_name
             for table_name, table_data in schema["tables"].items()
-            if not table_name.startswith("_") and table_data.get("columns")
+            if table_name.startswith(resource_name) and table_data.get("columns")
         ]
 
     def _build_asset(self, dlt_asset: DLTTask, dlt_path: str) -> AssetsDefinition:
-        source_module, source_func_name = dlt_asset.params.source_module.rsplit(".", 1)
+        op_name, resource_name = dlt_asset.asset_key.rsplit("/", 1)
+
         destination_objects = self._get_dlt_destination_objects(
-            dlt_path, source_module, source_func_name
+            dlt_path,
+            dlt_asset.params.schema_file_path,
+            resource_name,
         )
-        op_name = dlt_asset.asset_key.rsplit("/", 1)[0]
 
-        dlt_asset_names: Dict[str, List[List[str]]] = {}
+        dlt_asset_names = [op_name.split("/") + [obj] for obj in destination_objects]
 
-        dlt_asset_names[op_name] = [
-            op_name.split("/") + [obj] for obj in destination_objects
-        ]
+        partitions = self._wb.asset_key_partition_map
+
+        partition_params = (
+            generate_partition_params(
+                partitions[dlt_asset.asset_key].model_dump(
+                    exclude_defaults=True, exclude_unset=True
+                )
+            )
+            if dlt_asset.asset_key in partitions
+            else None
+        )
 
         @multi_asset(
             name=op_name.replace("/", "__"),
             group_name=dlt_asset.group_name,
             required_resource_keys={"sensor_context", "dlt"},
             compute_kind="dlt",
+            partitions_def=(
+                TimeWindowPartitionsDefinition(**partition_params)
+                if partition_params
+                else None
+            ),
             specs=[
                 AssetSpec(
                     key=AssetKey(asset_name),
@@ -93,7 +113,7 @@ class DLTAssetCreator(BaseAssetCreator):
                     tags={"dagster/storage_kind": dlt_asset.params.destination},
                     metadata=dlt_asset.params.model_dump(),
                 )
-                for asset_name in dlt_asset_names[op_name]
+                for asset_name in dlt_asset_names
             ],
         )
         def _dlt_asset_defs(
@@ -104,7 +124,9 @@ class DLTAssetCreator(BaseAssetCreator):
                 context, self._resource_config_map, dlt_asset.params.model_dump()
             )
             dlt_client: OdpDltResource = context.resources.dlt
-            yield from dlt_client.run(replaced_params, dlt_asset, dlt_asset_names)
+            yield from dlt_client.run(
+                replaced_params, dlt_asset.asset_key, dlt_asset_names
+            )
 
         return _dlt_asset_defs
 
