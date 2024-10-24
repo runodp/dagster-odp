@@ -21,7 +21,7 @@ from .utils import update_asset_params
 @odp_resource("dlt")
 class OdpDltResource(ConfigurableResource):
     """
-    A configurable resource for managing DLT (Data Loading Tool) operations.
+    A configurable resource for managing DLT (Data Load Tool) operations.
 
     This resource provides methods for executing DLT pipelines, handling metadata,
     and managing DLT-specific configurations.

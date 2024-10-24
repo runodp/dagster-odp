@@ -17,6 +17,19 @@ def _get_check_result(check_results: List[Dict[str, Any]]) -> AssetCheckResult:
     outcomes = [r["outcome"] for r in check_results]
     has_fail = "FAIL" in outcomes
     has_warn = "WARN" in outcomes
+    has_none = any(outcome is None for outcome in outcomes)
+
+    if has_none:
+        return AssetCheckResult(
+            passed=False,
+            severity=AssetCheckSeverity.ERROR,
+            metadata={
+                c["check"]: (
+                    "ERROR: No outcome" if c["outcome"] is None else c["outcome"]
+                )
+                for c in check_results
+            },
+        )
 
     return AssetCheckResult(
         passed=not (has_fail or has_warn),
@@ -29,6 +42,7 @@ def _get_asset_check_def(check_params: Dict[str, Any]) -> AssetChecksDefinition:
     @asset_check(
         name=os.path.basename(check_params["check_file_path"]).split(".")[0],
         asset=AssetKey(check_params["asset_key"].split("/")),
+        description=check_params["description"],
         required_resource_keys={"soda"},
         compute_kind="soda",
         blocking=check_params["blocking"],

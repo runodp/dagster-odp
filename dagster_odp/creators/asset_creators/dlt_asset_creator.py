@@ -1,5 +1,5 @@
 import os
-from typing import Dict, Iterator, List, Optional
+from typing import Dict, Iterator, List, Optional, Set
 
 import yaml
 from dagster import (
@@ -73,7 +73,7 @@ class DLTAssetCreator(BaseAssetCreator):
         ]
 
     def _build_asset(self, dlt_asset: DLTTask, dlt_path: str) -> AssetsDefinition:
-        op_name, resource_name = dlt_asset.asset_key.rsplit("/", 1)
+        prefix, resource_name = dlt_asset.asset_key.rsplit("/", 1)
 
         destination_objects = self._get_dlt_destination_objects(
             dlt_path,
@@ -81,7 +81,7 @@ class DLTAssetCreator(BaseAssetCreator):
             resource_name,
         )
 
-        dlt_asset_names = [op_name.split("/") + [obj] for obj in destination_objects]
+        dlt_asset_names = [prefix.split("/") + [obj] for obj in destination_objects]
 
         partitions = self._wb.asset_key_partition_map
 
@@ -96,7 +96,7 @@ class DLTAssetCreator(BaseAssetCreator):
         )
 
         @multi_asset(
-            name=op_name.replace("/", "__"),
+            name=dlt_asset.asset_key.replace("/", "__"),
             group_name=dlt_asset.group_name,
             required_resource_keys={"sensor_context", "dlt"},
             compute_kind="dlt",
@@ -108,7 +108,7 @@ class DLTAssetCreator(BaseAssetCreator):
             specs=[
                 AssetSpec(
                     key=AssetKey(asset_name),
-                    deps=[AssetKey(op_name.split("/"))],
+                    deps=[AssetKey(prefix.split("/"))],
                     description=("/").join(asset_name),
                     tags={"dagster/storage_kind": dlt_asset.params.destination},
                     metadata=dlt_asset.params.model_dump(),
@@ -153,9 +153,14 @@ class DLTAssetCreator(BaseAssetCreator):
             dlt_path = self._resource_class_map["dlt"].project_dir
 
             external_assets = []
+            created_external_keys: Set[tuple] = set()
+
             for asset in dlt_assets:
-                external_asset_key = asset.asset_key.split("/")[:-1]
-                if external_asset_key:
+                external_asset_key = tuple(asset.asset_key.split("/")[:-1])
+                if (
+                    external_asset_key
+                    and external_asset_key not in created_external_keys
+                ):
                     external_assets.append(
                         external_asset_from_spec(
                             AssetSpec(
@@ -165,6 +170,7 @@ class DLTAssetCreator(BaseAssetCreator):
                             )
                         )
                     )
+                    created_external_keys.add(external_asset_key)
             self._dlt_assets = external_assets + [
                 self._build_asset(t, dlt_path) for t in dlt_assets
             ]

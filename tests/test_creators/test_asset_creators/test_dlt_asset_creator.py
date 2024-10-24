@@ -124,7 +124,7 @@ def test_build_asset(
 
     mock_multi_asset.assert_called_once()
     _, kwargs = mock_multi_asset.call_args
-    assert kwargs["name"] == "test__abc"
+    assert kwargs["name"] == "test__abc__dlt_asset"
     assert kwargs["group_name"] == "test_group"
     assert kwargs["required_resource_keys"] == {"sensor_context", "dlt"}
     assert kwargs["compute_kind"] == "dlt"
@@ -183,3 +183,39 @@ def test_get_assets(
         dlt_asset_creator._wb.get_assets_with_task_type.return_value[0],
         "/path/to/dlt_project",
     )
+
+
+@patch("dagster_odp.creators.asset_creators.dlt_asset_creator.external_asset_from_spec")
+@patch.object(DLTAssetCreator, "_build_asset")
+def test_get_assets_with_duplicate_externals(
+    mock_build_asset, mock_external_asset_from_spec, dlt_asset_creator, dlt_task
+):
+    # Create second task with same external prefix but different asset name
+    dlt_task2 = DLTTask(
+        asset_key="test/abc/another_asset",  # Same prefix as dlt_task (test/abc)
+        task_type="dlt",
+        group_name="test_group",
+        params=DLTParams(
+            schema_file_path="schemas/export/test_function.schema.yaml",
+            source_module="test_module.test_function",
+            source_params={},
+            destination="bigquery",
+            destination_params={},
+            pipeline_params={"dataset_name": "test_dataset"},
+        ),
+    )
+
+    dlt_asset_creator._wb.get_assets_with_task_type.return_value = [dlt_task, dlt_task2]
+    mock_build_asset.side_effect = [Mock(spec=AssetsDefinition) for _ in range(2)]
+    mock_external_asset_from_spec.return_value = Mock(spec=AssetsDefinition)
+
+    result = dlt_asset_creator.get_assets()
+
+    # Verify external asset created only once despite having two tasks
+    mock_external_asset_from_spec.assert_called_once()
+
+    # Verify both DLT assets were built
+    assert mock_build_asset.call_count == 2
+
+    # Verify correct number of total assets (1 external + 2 DLT)
+    assert len(result) == 3

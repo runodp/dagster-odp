@@ -21,6 +21,7 @@ def mock_workflow_builder():
                     "asset_key": "test_asset",
                     "blocking": True,
                     "data_source": "test_source",
+                    "description": "Test check 1",
                 }
             )
         ),
@@ -31,6 +32,7 @@ def mock_workflow_builder():
                     "asset_key": "test_asset2",
                     "blocking": False,
                     "data_source": "test_source2",
+                    "description": "Test check 2",
                 }
             )
         ),
@@ -39,14 +41,43 @@ def mock_workflow_builder():
 
 
 @pytest.mark.parametrize(
-    "outcomes,expected_passed,expected_severity",
+    "outcomes,expected_passed,expected_severity,expected_metadata",
     [
-        (["PASS", "PASS"], True, AssetCheckSeverity.WARN),
-        (["PASS", "WARN"], False, AssetCheckSeverity.WARN),
-        (["PASS", "FAIL"], False, AssetCheckSeverity.ERROR),
+        (
+            ["PASS", "PASS"],
+            True,
+            AssetCheckSeverity.WARN,
+            {"check0": "PASS", "check1": "PASS"},
+        ),
+        (
+            ["PASS", "WARN"],
+            False,
+            AssetCheckSeverity.WARN,
+            {"check0": "PASS", "check1": "WARN"},
+        ),
+        (
+            ["PASS", "FAIL"],
+            False,
+            AssetCheckSeverity.ERROR,
+            {"check0": "PASS", "check1": "FAIL"},
+        ),
+        (
+            [None, "PASS"],
+            False,
+            AssetCheckSeverity.ERROR,
+            {"check0": "ERROR: No outcome", "check1": "PASS"},
+        ),
+        (
+            [None, None],
+            False,
+            AssetCheckSeverity.ERROR,
+            {"check0": "ERROR: No outcome", "check1": "ERROR: No outcome"},
+        ),
     ],
 )
-def test_get_check_result(outcomes, expected_passed, expected_severity):
+def test_get_check_result(
+    outcomes, expected_passed, expected_severity, expected_metadata
+):
     check_results = [
         {"outcome": outcome, "check": f"check{i}"} for i, outcome in enumerate(outcomes)
     ]
@@ -56,8 +87,7 @@ def test_get_check_result(outcomes, expected_passed, expected_severity):
     assert result.passed == expected_passed
     assert result.severity == expected_severity
     assert result.metadata == {
-        f"check{i}": TextMetadataValue(text=outcome)
-        for i, outcome in enumerate(outcomes)
+        k: TextMetadataValue(text=v) for k, v in expected_metadata.items()
     }
 
 
@@ -67,6 +97,7 @@ def test_get_asset_check_def():
         "asset_key": "test_asset",
         "blocking": True,
         "data_source": "test_source",
+        "description": "Test check",
     }
 
     result = _get_asset_check_def(check_params)
