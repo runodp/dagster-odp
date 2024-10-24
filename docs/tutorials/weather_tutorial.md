@@ -1,4 +1,4 @@
-# Weather Analysis Tutorial
+# Weather Analysis Tutorial (Introductory)
 
 In this tutorial, we'll build a data pipeline using Dagster ODP to analyze weather data across different countries for January 2024. 
 
@@ -158,7 +158,7 @@ assets:
 
   - asset_key: export_aggregated_data
     task_type: duckdb_table_to_file
-    description: "Export aggregated data to Parquet"
+    description: "Export aggregated data to CSV"
     group_name: data_export
     depends_on: [aggregated_weather_data]
     params:

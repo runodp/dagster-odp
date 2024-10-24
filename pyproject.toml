@@ -20,6 +20,7 @@ dependencies = [
     "dagster-gcp",
     "dbt-core",
     "dbt-bigquery",
+    "dbt-duckdb",
     "dagster-dbt",
     "dlt[bigquery]",
     "duckdb",
@@ -28,7 +29,6 @@ dependencies = [
     "soda-core",
     "soda-core-bigquery",
     "soda-core-duckdb",
-    "dbt-duckdb",
     "chevron"
 ]
 
