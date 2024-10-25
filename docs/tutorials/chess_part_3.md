@@ -368,6 +368,10 @@ Now we can run our complete pipeline:
 
 4. After the job completes, you can find your results in `data/monthly_player_profiles.csv`.
 
+The complete pipeline in the Dagster UI will look like this:
+
+![Chess Analysis Pipeline Lineage](../assets/chess_analysis_lineage.svg)
+
 ## Examining the Results
 
 The final CSV file will contain rich analytics about each player's monthly performance:
@@ -376,12 +380,6 @@ The final CSV file will contain rich analytics about each player's monthly perfo
 - Total games played each month
 - Win/loss statistics
 - Average accuracy with white and black pieces
-
-This data can be used for various analyses, such as:
-
-- Tracking player activity over time
-- Analyzing performance differences between white and black pieces
-- Identifying trends in accuracy and win rates
 
 ## Conclusion
 

@@ -22,7 +22,12 @@ nav:
   - Getting Started:
     - Overview: getting-started/overview.md
     - Quickstart: getting-started/quickstart.md
-  - Tutorials: tutorials.md
+  - Tutorials:
+    - Overview: tutorials/tutorials.md
+    - Weather Tutorial: tutorials/weather_tutorial.md
+    - Chess Tutorial Part 1: tutorials/chess_part_1.md
+    - Chess Tutorial Part 2: tutorials/chess_part_2.md
+    - Chess Tutorial Part 3: tutorials/chess_part_3.md
   - Concepts:
     - Overview: concepts/concepts.md
     - Workflow config: concepts/workflow_config.md

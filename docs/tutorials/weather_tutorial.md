@@ -192,7 +192,7 @@ This configuration creates a pipeline that downloads weather and country data, l
 
 Once you've completed all the setup steps and run your pipeline, you'll be able to see your job in the Dagster UI, looking something like this:
 
-![Weather Analysis Job in Dagster UI](../assets/Job_weather_analysis.svg)
+![Weather Analysis Job in Dagster UI](../assets/weather_analysis_job.svg)
 
 ## Step 5: Create the SQL Query
 
