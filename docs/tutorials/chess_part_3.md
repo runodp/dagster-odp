@@ -22,7 +22,7 @@ ODP's integration with DBT is designed to be both simple and flexible. Here's ho
 
 ### Basic DBT Integration
 
-The simplest way to use DBT with ODP is to just define a DBT resource in your `dagster_config.yaml`. Dagster will:
+The simplest way to use DBT with ODP is to just define a DBT resource in your `dagster_config.yaml`. ODP will create a Dagster DBT asset that:
 
 - Automatically discover all DBT models in your project
 - Create corresponding Dagster assets for each model
@@ -166,9 +166,9 @@ player_games AS (
         white__result AS result,
         CAST(accuracies__white AS FLOAT) AS accuracy
     FROM deduped_games
-    
+
     UNION ALL
-    
+
     SELECT
         black__aid AS player_id,
         DATE_TRUNC('month', CAST(end_time AS DATE)) AS game_month,
@@ -189,7 +189,7 @@ SELECT
     ROUND(AVG(CASE WHEN color = 'black' THEN accuracy ELSE NULL END), 2) AS avg_black_accuracy
 FROM player_games
 {% if is_incremental() %}
-WHERE DATE_TRUNC('month', CAST(end_time AS DATE)) = DATE '{{ target_month }}'
+WHERE game_month = DATE '{{ target_month }}'
 {% endif %}
 GROUP BY 1, 2
 ```
@@ -342,14 +342,6 @@ This is because:
 - `monthly_player_stats` needs partition information and variables
 - `monthly_player_profiles` works fine with Dagster's automatic asset creation
 
-### Environment Setup
-
-Create a `.env` file in your project directory (`chess_analysis`):
-```bash
-DAGSTER_DBT_PARSE_PROJECT_ON_LOAD=1
-```
-This tells Dagster ODP to parse your DBT project when loading and create the manifest.json file dynamically, keeping DBT assets up-to-date with your models.
-
 ## Running the Complete Pipeline
 
 Now we can run our complete pipeline:
@@ -358,9 +350,6 @@ Now we can run our complete pipeline:
     ```bash
     dagster dev
     ```
-
-    !!!error "JSONDecodeError"
-        If you encounter a `JSONDecodeError`, that's a [known issue](https://github.com/dagster-io/dagster/issues/23573). Re-running the server should fix the problem.
 
 2. Navigate to the Jobs page in the UI and find the `monthly_chess_data_ingestion` job.
 
