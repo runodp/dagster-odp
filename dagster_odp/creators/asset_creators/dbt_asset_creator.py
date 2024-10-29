@@ -9,12 +9,11 @@ from dagster import (
     TimeWindowPartitionsDefinition,
     external_assets_from_specs,
 )
-from dagster_dbt import DagsterDbtTranslator, DbtCliEventMessage, dbt_assets
+from dagster_dbt import DagsterDbtTranslator, DbtCliEventMessage, DbtProject, dbt_assets
 
 from ...config_manager.models.workflow_model import DBTTask
 from ...resources.definitions import OdpDbtResource
 from .base_asset_creator import BaseAssetCreator
-from .dbt_project_manager import DBTProjectManager
 from .utils import generate_partition_params
 
 
@@ -36,8 +35,7 @@ class CustomDagsterDbtTranslator(DagsterDbtTranslator):
 
     def get_metadata(self, dbt_resource_props: Mapping[str, Any]) -> dict[str, Any]:
         base_metadata = super().get_metadata(dbt_resource_props)
-        merged_metadata = {**base_metadata, **self.custom_metadata}
-        return merged_metadata
+        return {**base_metadata, **self.custom_metadata}
 
 
 class DBTAssetCreator(BaseAssetCreator):
@@ -45,11 +43,12 @@ class DBTAssetCreator(BaseAssetCreator):
     A concrete implementation of BaseAssetCreator for managing DBT assets.
 
     This class is responsible for creating Dagster asset definitions
-    from DBT models. It uses a DBTProjectManager to handle DBT-specific operations.
+    from DBT models. It uses DbtProject for core DBT functionality and adds
+    ODP-specific asset creation capabilities.
 
     Attributes:
         _dbt_cli_resource (OdpDbtResource): The DBT CLI resource.
-        _dbt_project_manager (DBTProjectManager): Manager for DBT project operations.
+        _dbt_project (DbtProject): Core DBT project functionality.
         _dbt_manifest_path (Path): The path to the DBT manifest file.
 
     Methods:
@@ -63,23 +62,29 @@ class DBTAssetCreator(BaseAssetCreator):
     def __init__(self) -> None:
         super().__init__()
         dbt_cli_resource = self._resource_class_map.get("dbt")
-        if dbt_cli_resource:
-            self._dbt_cli_resource: OdpDbtResource = dbt_cli_resource
-        else:
+        if not dbt_cli_resource:
             raise ValueError("dbt resource must be configured in dagster config")
 
-        self._project_manager = DBTProjectManager(
-            self._dbt_cli_resource, self._wb.asset_key_dbt_params_map
+        self._dbt_cli_resource: OdpDbtResource = dbt_cli_resource
+        self._dbt_project = DbtProject(
+            project_dir=self._dbt_cli_resource.project_dir,
+            target=self._dbt_cli_resource.target,
         )
-        self._dbt_manifest_path = self._project_manager.manifest_path
+        # Ensure project is prepared during development
+        self._dbt_project.prepare_if_dev()
 
     def build_dbt_external_sources(self) -> List[AssetsDefinition]:
         """
-        Builds the dbt sources assets.
+        Creates Dagster assets for any DBT sources that are marked as external
+        in their DBT metadata. This allows non-dagster sources to be represented
+        in Dagster in the appropriate group.
 
         Returns:
-            List[AssetsDefinition]: The dbt sources assets.
+            List[AssetsDefinition]: A list of asset definitions for external sources.
         """
+        with open(self._dbt_project.manifest_path, "r", encoding="utf-8") as f:
+            manifest = json.load(f)
+
         dagster_dbt_translator = DagsterDbtTranslator()
         asset_defs = [
             AssetSpec(
@@ -87,7 +92,7 @@ class DBTAssetCreator(BaseAssetCreator):
                 group_name=dagster_dbt_translator.get_group_name(dbt_resource_props),
                 description=dagster_dbt_translator.get_description(dbt_resource_props),
             )
-            for dbt_resource_props in self._project_manager.manifest_sources.values()
+            for dbt_resource_props in manifest.get("sources", {}).values()
             if dbt_resource_props.get("meta", {}).get("dagster", {}).get("external")
             in (True, "true", "True", "TRUE")
         ]
@@ -103,16 +108,15 @@ class DBTAssetCreator(BaseAssetCreator):
         dbt_vars: Dict[str, str],
     ) -> Iterator[Any]:
         dbt = context.resources.dbt
-
         replaced_dbt_vars = dbt.update_asset_params(
             context=context,
             resource_config=self._resource_config_map,
             asset_params=dbt_vars,
         )
 
-        dbt_args = ["build", "--vars", json.dumps(replaced_dbt_vars)]
-
-        dbt_cli_invocation = dbt.cli(dbt_args, context=context)
+        dbt_cli_invocation = dbt.cli(
+            ["build", "--vars", json.dumps(replaced_dbt_vars)], context=context
+        )
 
         for event in dbt_cli_invocation.stream_raw_events():
             for dagster_event in event.to_default_asset_events(
@@ -131,13 +135,14 @@ class DBTAssetCreator(BaseAssetCreator):
     def _build_asset(
         self,
         name: str,
-        # Name needs to be passed in, otherwise there's a dagster bug that is unable to
-        # differentiate between the different DBT AssetDefinitions
+        # Name needs to be passed in; Dagster cannot automatically
+        # differentiate between different DBT AssetDefinitions because of a bug
         dbt_vars: Dict[str, str],
         select: str = "fqn:*",
         exclude: Optional[str] = None,
         partition_params: Optional[Dict] = None,
     ) -> AssetsDefinition:
+        """Creates a DBT asset definition with specified parameters."""
         partitions_def = (
             TimeWindowPartitionsDefinition(**partition_params)
             if partition_params
@@ -153,7 +158,7 @@ class DBTAssetCreator(BaseAssetCreator):
         )
 
         @dbt_assets(
-            manifest=self._dbt_manifest_path,
+            manifest=self._dbt_project.manifest_path,
             select=select,
             exclude=exclude,
             partitions_def=partitions_def,
@@ -168,26 +173,22 @@ class DBTAssetCreator(BaseAssetCreator):
 
     def get_assets(self) -> List[AssetsDefinition]:
         """
-        Retrieves and constructs all DBT asset definitions based on the configuration.
+        Creates all DBT asset definitions based on configuration.
 
-        This method performs the following tasks:
-        1. Retrieves DBT assets defined in the configuration.
-        2. Creates separate asset definitions for each DBT asset, which may contain
-           multiple DBT models.
-        3. Applies DBT vars and partitions (if specified) to each asset,
-           affecting all models within that asset.
-        4. Creates an additional 'unselected_dbt_assets' asset for models not explicitly
-           selected in other assets.
-        5. Includes external source assets.
+        This method processes the ODP configuration to create three types of assets:
+        1. Configured DBT models with their partitioning and variables
+        2. Remaining unselected models (if load_all_models is True)
+        3. External source definitions
 
         The partitioning is optional and applied on a per-asset basis.
-        DBT vars are also applied per asset.
+        DBT vars are also applied per asset, allowing different configurations
+        for different parts of your DBT project.
 
         Returns:
             List[AssetsDefinition]: A list containing:
-                - Individual asset definitions for each configured DBT asset.
-                - An 'unselected_dbt_assets' asset for the remaining models.
-                - External source asset definitions.
+                - Individual asset definitions for each configured DBT asset
+                - An 'unselected_dbt_assets' asset for remaining models (if enabled)
+                - External source asset definitions
         """
         partitions = self._wb.asset_key_partition_map
         dbt_config_assets = self._wb.get_assets_with_task_type(DBTTask)
@@ -212,11 +213,11 @@ class DBTAssetCreator(BaseAssetCreator):
                 )
             )
 
-        partition_selection = " ".join(
-            [dbt_asset.params.selection for dbt_asset in dbt_config_assets]
-        )
-
+        # Handle unselected models if configured
         if self._dbt_cli_resource.load_all_models:
+            partition_selection = " ".join(
+                dbt_asset.params.selection for dbt_asset in dbt_config_assets
+            )
             all_dbt_assets.append(
                 self._build_asset(
                     exclude=partition_selection,
@@ -224,4 +225,5 @@ class DBTAssetCreator(BaseAssetCreator):
                     dbt_vars={},
                 )
             )
+
         return all_dbt_assets + self.build_dbt_external_sources()

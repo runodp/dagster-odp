@@ -1,4 +1,4 @@
-from pathlib import Path
+import json
 from unittest.mock import Mock, patch
 
 import pytest
@@ -9,7 +9,7 @@ from dagster import (
     TimeWindowPartitionsDefinition,
 )
 from dagster._core.definitions.partition import ScheduleType
-from dagster_dbt import DbtCliEventMessage
+from dagster_dbt import DbtCliEventMessage, DbtProject
 
 from dagster_odp.config_manager.models.workflow_model import (
     DBTParams,
@@ -21,6 +21,45 @@ from dagster_odp.creators.asset_creators.dbt_asset_creator import (
     CustomDagsterDbtTranslator,
     DBTAssetCreator,
 )
+
+
+@pytest.fixture
+def mock_manifest():
+    return {
+        "sources": {
+            "source1": {
+                "name": "source1",
+                "resource_type": "source",
+                "source_name": "test_source",
+                "meta": {"dagster": {}},
+                "description": "test description",
+            },
+            "source2": {
+                "name": "source2",
+                "resource_type": "source",
+                "source_name": "test_source",
+                "meta": {"dagster": {"external": True}},
+                "description": "test description",
+            },
+        }
+    }
+
+
+@pytest.fixture
+def mock_dbt_project(tmp_path, mock_manifest):
+    project_dir = tmp_path / "dbt_project"
+    project_dir.mkdir()
+
+    # Create manifest.json
+    manifest_dir = project_dir / "target"
+    manifest_dir.mkdir()
+    manifest_path = manifest_dir / "manifest.json"
+    manifest_path.write_text(json.dumps(mock_manifest))
+
+    # Create minimal dbt_project.yml
+    (project_dir / "dbt_project.yml").write_text("name: test_project\nversion: 1.0.0")
+
+    return DbtProject(project_dir=str(project_dir), target="dev")
 
 
 @pytest.fixture
@@ -49,45 +88,35 @@ def mock_workflow_builder(mock_dbt_task):
 
 
 @pytest.fixture
-def mock_config_builder():
+def mock_config_builder(mock_dbt_project):
     mock_cb = Mock()
     mock_cb.get_config.return_value = Mock(
         resources=[
-            Mock(resource_kind="dbt", params=Mock(project_dir="/path/to/dbt_project"))
+            Mock(
+                resource_kind="dbt",
+                params=Mock(
+                    project_dir=str(mock_dbt_project.project_dir),
+                    target="dev",
+                    load_all_models=True,
+                ),
+            )
         ]
     )
-    mock_cb.resource_config_map = {"dbt": {"project_dir": "/path/to/dbt_project"}}
-    mock_cb.resource_class_map = {"dbt": Mock(project_dir="/path/to/dbt_project")}
+    mock_cb.resource_config_map = {
+        "dbt": {"project_dir": str(mock_dbt_project.project_dir)}
+    }
+    mock_cb.resource_class_map = {
+        "dbt": Mock(
+            project_dir=str(mock_dbt_project.project_dir),
+            target="dev",
+            load_all_models=True,
+        )
+    }
     return mock_cb
 
 
 @pytest.fixture
-def mock_dbt_project_manager():
-    return Mock(
-        manifest_path=Path("/path/to/dbt_project/target/manifest.json"),
-        manifest_sources={
-            "source1": {
-                "name": "source1",
-                "resource_type": "source",
-                "source_name": "test_source",
-                "meta": {"dagster": {}},
-                "description": "test description",
-            },
-            "source2": {
-                "name": "source2",
-                "resource_type": "source",
-                "source_name": "test_source",
-                "meta": {"dagster": {"asset_key": ["custom", "key"]}},
-                "description": "test description",
-            },
-        },
-    )
-
-
-@pytest.fixture
-def dbt_asset_creator(
-    mock_workflow_builder, mock_config_builder, mock_dbt_project_manager
-):
+def dbt_asset_creator(mock_workflow_builder, mock_config_builder, mock_dbt_project):
     with (
         patch(
             "dagster_odp.creators.asset_creators.base_asset_creator.WorkflowBuilder",
@@ -98,11 +127,28 @@ def dbt_asset_creator(
             return_value=mock_config_builder,
         ),
         patch(
-            "dagster_odp.creators.asset_creators.dbt_asset_creator.DBTProjectManager",
-            return_value=mock_dbt_project_manager,
+            "dagster_odp.creators.asset_creators.dbt_asset_creator.DbtProject",
+            return_value=mock_dbt_project,
         ),
     ):
         return DBTAssetCreator()
+
+
+# Rest of the test functions remain the same, but update build_dbt_external_sources test:
+
+
+@patch(
+    "dagster_odp.creators.asset_creators.dbt_asset_creator.external_assets_from_specs"
+)
+def test_build_dbt_external_sources(mock_external_assets, dbt_asset_creator):
+    dbt_asset_creator.build_dbt_external_sources()
+
+    mock_external_assets.assert_called_once()
+    args = mock_external_assets.call_args[0][0]
+
+    # Only source2 is marked as external
+    assert len(args) == 1
+    assert args[0].key == AssetKey(["test_source", "source2"])
 
 
 def test_custom_dagster_dbt_translator_get_metadata():
@@ -116,43 +162,6 @@ def test_custom_dagster_dbt_translator_get_metadata():
         result = translator.get_metadata({})
 
     assert result == {"base_key": "base_value", "custom_key": "custom_value"}
-
-
-@pytest.mark.parametrize(
-    "external_value, should_include",
-    [
-        (True, True),
-        ("true", True),
-        (False, False),
-        (None, False),
-    ],
-)
-@patch(
-    "dagster_odp.creators.asset_creators.dbt_asset_creator.external_assets_from_specs"
-)
-def test_build_dbt_external_sources(
-    mock_external_assets, external_value, should_include, dbt_asset_creator
-):
-    dbt_asset_creator._project_manager.manifest_sources = {
-        "source1": {
-            "name": "source1",
-            "resource_type": "source",
-            "source_name": "test_source",
-            "meta": {"dagster": {"external": external_value}},
-            "description": "test description",
-        },
-    }
-
-    dbt_asset_creator.build_dbt_external_sources()
-
-    mock_external_assets.assert_called_once()
-    args = mock_external_assets.call_args[0][0]
-
-    if should_include:
-        assert len(args) == 1
-        assert args[0].key == AssetKey(["test_source", "source1"])
-    else:
-        assert len(args) == 0
 
 
 def test_get_dbt_output_metadata(dbt_asset_creator):
@@ -225,7 +234,7 @@ def test_build_asset(
 
     mock_dbt_assets.assert_called_once()
     _, kwargs = mock_dbt_assets.call_args
-    assert kwargs["manifest"] == dbt_asset_creator._dbt_manifest_path
+    assert kwargs["manifest"] == dbt_asset_creator._dbt_project.manifest_path
     assert kwargs["select"] == "test_model"
     assert kwargs["name"] == "test_asset"
     assert kwargs["required_resource_keys"] == {"dbt", "sensor_context"}

@@ -16,15 +16,28 @@ def odp_task(
 ) -> Callable[[Type[T]], Type[T]]:
     """
     Decorator to register a task with additional metadata.
+    The decorated class must inherit from BaseTask.
 
     Args:
-        task_type (str): The type of the task.
-        compute_kind (Optional[str]): The compute kind for the task.
-        storage_kind (Optional[str]): The storage kind for the task.
-        required_resources (Optional[List[str]]): List of required resources.
+        task_type (str): Name used to reference this task in workflow configurations
+            under the 'task_type' field.
+        compute_kind (Optional[str]): Label for the computation type
+            (e.g., "python", "sql"). Passed to the Dagster asset definition.
+        storage_kind (Optional[str]): Label for the output storage type
+            (e.g., "filesystem", "database"). Passed to the Dagster asset definition.
+        required_resources (Optional[List[str]]): Resources this task needs. Must be
+            registered with @odp_resource and configured in dagster_config.yaml.
+            Available in task implementation via self._resources dictionary.
 
-    Returns:
-        Callable[[Type[T]], Type[T]]: A decorator function.
+    Example:
+        ```python
+        @odp_task("bq_query", compute_kind="bigquery", required_resources=["bigquery"])
+        class BigQueryTask(BaseTask):
+            query: str
+            def run(self):
+                client = self._resources["bigquery"]
+                # Implementation...
+        ```
     """
 
     def decorator(cls: Type[T]) -> Type[T]:

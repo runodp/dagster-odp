@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 from dagster import AssetExecutionContext
 from dagster_dbt import DbtCliResource
@@ -36,7 +36,6 @@ class OdpDbtResource(DbtCliResource):
     based on the execution context.
     """
 
-    sources_file_path: Optional[str] = None
     load_all_models: bool = True
 
     def update_asset_params(
