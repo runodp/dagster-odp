@@ -1,3 +1,4 @@
+from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
 import pytest
@@ -17,7 +18,12 @@ def mock_gcs_resource():
 @pytest.fixture
 def mock_context(mock_gcs_resource):
     context = Mock(spec=SensorEvaluationContext)
-    context.resources.gcs = mock_gcs_resource
+    # Create a SimpleNamespace to simulate the resources attribute
+    resources = SimpleNamespace(gcs=mock_gcs_resource)
+    # Make resources behave like a namedtuple with _asdict method
+    resources._asdict = lambda: {"gcs": mock_gcs_resource}
+    context.resources = resources
+    context.cursor = None
     return context
 
 
@@ -26,7 +32,7 @@ def test_gcs_sensor_no_new_objects(mock_get_gcs_keys, mock_context):
     mock_get_gcs_keys.return_value = []
 
     sensor = GCSSensor(bucket_name="test-bucket")
-    result = sensor.run(mock_context)
+    result = sensor.evaluate(mock_context)
 
     with pytest.raises(StopIteration) as exc_info:
         next(result)
@@ -44,7 +50,7 @@ def test_gcs_sensor_no_new_objects(mock_get_gcs_keys, mock_context):
 def test_gcs_sensor_new_objects_no_filter(mock_get_gcs_keys, mock_context):
     mock_get_gcs_keys.return_value = ["object1", "object2"]
     sensor = GCSSensor(bucket_name="test-bucket")
-    result = list(sensor.run(mock_context))
+    result = list(sensor.evaluate(mock_context))
 
     assert len(result) == 2
     assert all(isinstance(r, RunRequest) for r in result)
@@ -67,7 +73,7 @@ def test_gcs_sensor_new_objects_with_filter(mock_get_gcs_keys, mock_context):
         "other/object3",
     ]
     sensor = GCSSensor(bucket_name="test-bucket", path_prefix_filter="prefix/")
-    result = list(sensor.run(mock_context))
+    result = list(sensor.evaluate(mock_context))
 
     assert len(result) == 2
     assert all(isinstance(r, RunRequest) for r in result)
@@ -79,7 +85,7 @@ def test_gcs_sensor_cursor_usage(mock_get_gcs_keys, mock_context):
     mock_context.cursor = "last_object"
     mock_get_gcs_keys.return_value = []  # Simulating no new objects
     sensor = GCSSensor(bucket_name="test-bucket")
-    result = list(sensor.run(mock_context))
+    result = list(sensor.evaluate(mock_context))
 
     assert len(result) == 0
     mock_get_gcs_keys.assert_called_once_with(

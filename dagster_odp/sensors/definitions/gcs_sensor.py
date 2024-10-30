@@ -1,6 +1,6 @@
 from typing import Any, Generator, Optional
 
-from dagster import RunRequest, SensorEvaluationContext, SkipReason
+from dagster import RunRequest, SkipReason
 from dagster_gcp.gcs.sensor import get_gcs_keys
 
 from ..manager.base_sensor import BaseSensor
@@ -20,23 +20,17 @@ class GCSSensor(BaseSensor):
         bucket_name (str): The name of the GCS bucket to monitor.
         path_prefix_filter (Optional[str]): If provided, only objects with this
             prefix will trigger runs.
-
-    Methods:
-        run: Executes the sensor logic to check for new objects and yield
-            RunRequests.
     """
 
     bucket_name: str
     path_prefix_filter: Optional[str] = None
 
-    def run(
-        self, context: SensorEvaluationContext
-    ) -> Generator[RunRequest, Any, SkipReason | None]:
-        client = context.resources.gcs
-        since_key = context.cursor or None
+    def run(self) -> Generator[RunRequest, Any, SkipReason | None]:
+        client = self._resources["gcs"]
         new_gcs_objects = get_gcs_keys(
-            self.bucket_name, since_key=since_key, gcs_session=client
+            self.bucket_name, since_key=self._cursor, gcs_session=client
         )
+
         if not new_gcs_objects:
             return SkipReason(f"No new objects in bucket '{self.bucket_name}'")
 
@@ -62,5 +56,5 @@ class GCSSensor(BaseSensor):
 
             yield RunRequest(run_key=gcs_key, run_config=run_config)
 
-        context.update_cursor(new_gcs_objects[-1])
+        self._context.update_cursor(new_gcs_objects[-1])
         return None

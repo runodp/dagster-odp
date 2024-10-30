@@ -23,5 +23,9 @@ def get_jobs(wb: WorkflowBuilder) -> List[UnresolvedAssetJobDefinition]:
         selection = AssetSelection.from_coercible(
             list(job.asset_selection)
         ).required_multi_asset_neighbors()
-        jobs.append(define_asset_job(name=job.job_id, selection=selection))
+        jobs.append(
+            define_asset_job(
+                name=job.job_id, selection=selection, description=job.description
+            )
+        )
     return jobs

@@ -207,7 +207,6 @@ class WorkflowJob(BaseModel):
     job_id: str
     triggers: List[Trigger] = []
     asset_selection: Set[str]
-    dbt_selection: Optional[Set[str]] = set()
     description: Optional[str] = ""
 
     @model_validator(mode="after")

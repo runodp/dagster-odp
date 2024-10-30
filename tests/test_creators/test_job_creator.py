@@ -16,10 +16,16 @@ def mock_workflow_builder():
     mock_wb = Mock(spec=WorkflowBuilder)
     mock_wb.jobs = [
         WorkflowJob(
-            job_id="test_job_1", triggers=[], asset_selection={"asset1", "asset2"}
+            job_id="test_job_1",
+            triggers=[],
+            asset_selection={"asset1", "asset2"},
+            description="Test job 1 description",
         ),
         WorkflowJob(
-            job_id="test_job_2", triggers=[], asset_selection={"asset3", "asset4"}
+            job_id="test_job_2",
+            triggers=[],
+            asset_selection={"asset3", "asset4"},
+            description="Test job 2 description",
         ),
     ]
     return mock_wb
@@ -57,10 +63,14 @@ def test_job_creation_details(
 
     assert mock_define_asset_job.call_count == 2
     mock_define_asset_job.assert_any_call(
-        name="test_job_1", selection=mock_asset_selection
+        name="test_job_1",
+        selection=mock_asset_selection,
+        description="Test job 1 description",
     )
     mock_define_asset_job.assert_any_call(
-        name="test_job_2", selection=mock_asset_selection
+        name="test_job_2",
+        selection=mock_asset_selection,
+        description="Test job 2 description",
     )
 
 

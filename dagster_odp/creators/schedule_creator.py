@@ -36,17 +36,27 @@ def get_schedules(
     wb: WorkflowBuilder, job_defs: List[UnresolvedAssetJobDefinition]
 ) -> List[Union[ScheduleDefinition, UnresolvedPartitionedAssetScheduleDefinition]]:
     """
-    Builds schedules based on the trigger specs in the workflow config files.
+    Builds schedule definitions from workflow configuration. Supports two types of
+    schedules:
+
+    1. Cron-based schedules: Run jobs at fixed intervals using cron expressions
+       (e.g., "@daily", "0 * * * *").
+
+    2. Partition-based schedules: Run jobs based on asset partition definitions
+       (e.g., monthly partitions).
 
     Args:
-        wb (WorkflowBuilder): An instance of the WorkflowBuilder class.
-        job_defs (List[UnresolvedAssetJobDefinition]): List of job definitions.
+        wb (WorkflowBuilder): An instance of the WorkflowBuilder class containing
+            workflow configuration.
+        job_defs (List[UnresolvedAssetJobDefinition]): List of job definitions that
+            the schedules will trigger.
 
     Returns:
-        List of created schedule definitions.
+        List[Union[ScheduleDefinition, UnresolvedPartitionedAssetScheduleDefinition]]:
+            List of created schedule definitions.
 
     Raises:
-        ValueError: If a job for a trigger is not found.
+        ValueError: If a job referenced by a partition schedule is missing in job_defs.
     """
     schedules: List[
         Union[ScheduleDefinition, UnresolvedPartitionedAssetScheduleDefinition]

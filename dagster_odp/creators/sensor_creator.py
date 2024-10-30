@@ -16,7 +16,7 @@ def _get_sensor_def(job_id: str, spec: SensorTrigger) -> SensorDefinition:
         job_name=job_id,
         name=spec.trigger_id,
         description=spec.description,
-        evaluation_fn=spec.params.sensor_params.run,
+        evaluation_fn=spec.params.sensor_params.evaluate,
         default_status=DefaultSensorStatus.RUNNING,
         required_resource_keys=required_resources,
     )
@@ -29,7 +29,6 @@ def get_sensors(wb: WorkflowBuilder) -> List[SensorDefinition]:
 
     Args:
         wb (WorkflowBuilder): An instance of the WorkflowBuilder class.
-        sensor_config (Dict): The sensor configuration.
 
     Returns:
         List[SensorDefinition]: List of sensor definitions.
