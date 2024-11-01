@@ -30,12 +30,14 @@ nav:
     - Chess Tutorial Part 3: tutorials/chess_part_3.md
   - Concepts:
     - Overview: concepts/concepts.md
-    - Workflow config: concepts/workflow_config.md
-    - Dagster config: concepts/dagster_config.md
-    - Tasks: concepts/tasks.md
+    - Tasks and Assets: concepts/tasks_and_assets.md
     - Resources: concepts/resources.md
-    - Sensors: concepts/sensors.md
+    - Automation: concepts/automation.md
+    - Configuration: concepts/configuration.md
+  - Integrations:
+    - Overview: concepts/integrations.md
+    - DLT: integrations/dlt.md
+    - DBT: integrations/dbt.md
+    - Soda: integrations/soda.md
   - Reference:
     - Overview: reference/reference.md
-    - Workflows: reference/workflows.md
-    - Dagster Config: reference/dagster_config.md

@@ -20,9 +20,21 @@ class GCSFileToBQ(BaseTask):
     A task that loads data from a Google Cloud Storage (GCS) file to a BigQuery table.
 
     Attributes:
-        source_file_uri (str): The URI of the source file in GCS.
-        destination_table_id (str): The ID of the destination BigQuery table.
-        job_config_params (Dict[str, Any]): Additional parameters for the load job.
+        source_file_uri (str): The URI of the source file in GCS
+            (e.g., 'gs://bucket/path/file.csv').
+        destination_table_id (str): The fully-qualified ID of the destination BigQuery
+            table in the format 'project.dataset.table'.
+        job_config_params (Dict[str, Any]): Configuration parameters passed directly to
+            BigQuery's LoadJobConfig, with two special cases:
+            - '_time_partitioning': Converted to a TimePartitioning object
+            - '_schema': Converted to SchemaField objects
+            All other parameters are passed through as-is.
+
+    Returns:
+        Dict[str, Any]: Metadata about the load operation including:
+            - source_file_uri: The original source URI
+            - destination_table_id: The target table ID
+            - row_count: Number of rows loaded
     """
 
     source_file_uri: str
@@ -73,12 +85,21 @@ class GCSFileToBQ(BaseTask):
 )
 class BQTableToGCS(BaseTask):
     """
-    A task that exports data from a BigQuery table to a Google Cloud Storage (GCS) file.
+    A task that exports data from a BigQuery table to Google Cloud Storage (GCS) files.
 
     Attributes:
-        source_table_id (str): The ID of the source BigQuery table.
-        destination_file_uri (str): The URI of the destination file in GCS.
-        job_config_params (Dict[str, Any]): Additional parameters for the extract job.
+        source_table_id (str): The fully-qualified ID of the source BigQuery table
+            in the format 'project.dataset.table'.
+        destination_file_uri (str): The URI pattern for the destination files in GCS.
+            Supports wildcards for sharded exports (e.g. 'gs://bucket/path/file-*.csv').
+        job_config_params (Dict[str, Any]): Configuration parameters passed directly to
+            BigQuery's ExtractJobConfig.
+
+    Returns:
+        Dict[str, Any]: Metadata about the export operation including:
+            - source_table_id: The source table ID
+            - destination_file_uri: The base path where files were exported
+            - row_count: Number of rows exported
     """
 
     source_table_id: str
@@ -132,11 +153,24 @@ class BQTableToGCS(BaseTask):
 class GCSFileDownload(BaseTask):
     """
     A task that downloads files from a Google Cloud Storage path to a local filesystem.
+    Supports downloading multiple files matching a prefix.
 
     Attributes:
-        source_file_uri (str): The URI of the source path in GCS
-            (e.g., 'gs://bucket-name/path/to/files/').
-        destination_file_path (str): The local directory where files should be saved.
+        source_file_uri (str): The URI of the source path in GCS. Can specify either
+            a single file or a prefix for multiple files (e.g., 'gs://bucket/path/').
+        destination_file_path (str): The local directory where files will be saved.
+            Must be a directory path, not a file path.
+
+    Returns:
+        Dict[str, Any]: Metadata about the download operation including:
+            - source_file_uri: The original source URI
+            - destination_file_path: The local directory path
+            - file_count: Number of files downloaded
+            - total_size_bytes: Total size of downloaded files
+
+    Raises:
+        ValueError: If source_file_uri isn't a valid GCS URI or if
+            destination_file_path contains a filename instead of just a directory path.
     """
 
     source_file_uri: str
