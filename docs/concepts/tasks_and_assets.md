@@ -166,26 +166,22 @@ When this task is used in a workflow configuration, ODP will:
 - Apply custom validation rules
 - Make metadata available to downstream assets
 
-### Task Best Practices
+Each task has access to:
 
-1. **Design for Reuse**: 
-    - Make tasks generic enough to be used in multiple contexts
-    - Use clear parameter names
-    - Return useful metadata for downstream assets
+- `self._context`: The `AssetExecutionContext` from Dagster
+- `self._resources`: Dictionary of configured required resources
 
-2. **Leverage Validation**:
-    - Use Pydantic's validation features
-    - Add custom validators for complex rules
-    - Provide clear error messages
+!!!info "Important"
+    After creating a custom task, you must import it in your `__init__.py` or `definitions.py` file for Python to execute the decorator and register the task with ODP. Simply defining the task class isn't enough - it needs to be imported where Dagster loads your code.
 
-3. **Resource Management**:
-    - Only request resources the task actually needs
-    - Use the `_context` attribute for logging and run information
-    - Handle resource errors gracefully
+    For example:
+    ```python
+    # definitions.py
+    from .tasks.custom_task import CustomTask  # Import your custom task
+    from dagster_odp import build_definitions
 
-4. **Metadata**:
-    - Return metadata that might be useful downstream
-    - Use consistent naming conventions for metadata fields
+    defs = build_definitions("odp_config")
+    ```
 
 ## Pre-built Tasks
 
@@ -196,14 +192,14 @@ ODP provides several pre-built tasks for common data operations:
 #### 1. file_to_duckdb
 Loads data from a file into a DuckDB table. Supports both local files and Google Cloud Storage (GCS).
 
-**Required Resources**: `duckdb`
-
 ```yaml
 task_type: file_to_duckdb
 params:
   source_file_uri: "path/to/file.parquet"  # Local path or gs:// URI
   destination_table_id: "my_table"         # Table name to create
 ```
+
+**Required Resources**: `duckdb`
 
 **Returns**:
 
@@ -214,14 +210,14 @@ params:
 #### 2. duckdb_query
 Executes SQL queries against DuckDB. Can read queries from strings or files.
 
-**Required Resources**: `duckdb`
-
 ```yaml
 task_type: duckdb_query
 params:
   query: "SELECT * FROM my_table"  # SQL query or file path
   is_file: false                   # Set true if query is in a file
 ```
+
+**Required Resources**: `duckdb`
 
 **Returns**:
 
@@ -231,14 +227,14 @@ params:
 #### 3. duckdb_table_to_file
 Exports a DuckDB table to a file. Supports local files and GCS.
 
-**Required Resources**: `duckdb`
-
 ```yaml
 task_type: duckdb_table_to_file
 params:
   source_table_id: "my_table"              # Table to export
   destination_file_uri: "output/data.csv"  # Where to save
 ```
+
+**Required Resources**: `duckdb`
 
 **Returns**:
 
@@ -252,8 +248,6 @@ ODP provides tasks for common Google Cloud Storage (GCS) and BigQuery operations
 
 #### 1. gcs_file_to_bq
 Loads data from Google Cloud Storage into BigQuery.
-
-**Required Resources**: `bigquery`
 
 ```yaml
 task_type: gcs_file_to_bq
@@ -279,6 +273,8 @@ params:
     source_format: "PARQUET"
 ```
 
+**Required Resources**: `bigquery`
+
 **Returns**:
 
 - `source_file_uri`: The original source URI
@@ -289,8 +285,6 @@ All parameters in `job_config_params` are passed directly to BigQuery's `LoadJob
 
 #### 2. bq_table_to_gcs
 Exports BigQuery tables to GCS files.
-
-**Required Resources**: `bigquery`
 
 ```yaml
 task_type: bq_table_to_gcs
@@ -305,6 +299,8 @@ params:
     compression: "SNAPPY"
 ```
 
+**Required Resources**: `bigquery`
+
 **Returns**:
 
 - `source_table_id`: The source table ID
@@ -316,8 +312,6 @@ All parameters in `job_config_params` are passed directly to BigQuery's `Extract
 #### 3. gcs_file_download
 Downloads files from GCS to local filesystem. Supports downloading single files or multiple files matching a prefix.
 
-**Required Resources**: `gcs`
-
 ```yaml
 task_type: gcs_file_download
 params:
@@ -325,11 +319,11 @@ params:
   destination_file_path: "/local/path/"       # Local directory path
 ```
 
-**Important Notes**:
-
-- `source_file_uri` must start with `gs://`
+- The `source_file_uri` must start with `gs://`
 - `destination_file_path` must be a directory path, not a file path
 - Directory structure from GCS is preserved locally
+
+**Required Resources**: `gcs`
 
 **Returns**:
 
@@ -360,12 +354,22 @@ params:
 
 ## Best Practices
 
-When working with tasks and assets:
+When working with tasks and assets in ODP, follow these key practices:
 
-1. **Design Tasks for Reuse**: Tasks should be generic enough to be used in multiple contexts but specific enough to be useful.
-2. **Use Meaningful Asset Keys**: Choose descriptive asset keys that reflect the data's purpose and lineage.
-3. **Group Related Assets**: Use the `group_name` parameter to organize assets by their purpose or domain.
-4. **Return Useful Metadata**: Tasks should return metadata that downstream assets might need.
-5. **Validate Parameters**: Use Pydantic's validation features to catch configuration errors early.
+1. **Task Design**
+    - Design tasks to be reusable across different pipelines and asset types
+    - Validate parameter values using Pydantic data types.
+    - Use the `_context` attribute when required to access the Dagster `AssetExecutionContext`
+    - Use appropriate `compute_kind` and `storage_kind` tags to help with asset visualization
+    - Return standardized metadata keys across similar tasks (e.g., always use `destination_table_id` for table names)
 
-This configuration-driven approach to asset creation is what makes ODP powerful - you can create complex data pipelines by composing and configuring tasks, without writing Python code for each asset.
+2. **Asset Configuration**
+    - Group related assets using `group_name` to organize assets in the Dagster UI
+    - Break up large workflow files into logical groups rather than having one large configuration
+
+3. **Resources**
+    - Only declare required resources that the task actually uses through `required_resources`
+    - Use ODP's resource parameter substitution (`{{resource.resource_kind.param}}`) in workflow files instead of hardcoding values
+    - Leverage ODP pre-built resources where possible for their enhanced capabilities (like DLT's automatic asset creation)
+
+This configuration-driven approach lets you build complex pipelines by composing and configuring tasks, making the most of ODP's features for asset management and dependency handling.

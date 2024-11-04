@@ -191,6 +191,9 @@ When ODP processes this configuration:
 - Required fields (those without defaults) must be provided
 - Optional fields use their default values if not specified
 
+!!!info "Important"
+    After creating a custom resource, you must import it in your `__init__.py` or `definitions.py` file for Python to execute the decorator and register the resource with ODP. The class definition alone isn't sufficient - it needs to be imported where Dagster loads your code.
+
 ### Using Resources in Tasks
 
 Resources are automatically injected into tasks that require them. Here's how to use resources in a task:
