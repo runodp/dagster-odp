@@ -12,7 +12,6 @@ from dagster._core.definitions.partition import ScheduleType
 from dagster_dbt import DbtCliEventMessage, DbtProject
 
 from dagster_odp.config_manager.models.workflow_model import (
-    DBTParams,
     DBTTask,
     DBTTaskParams,
     PartitionParams,
@@ -78,9 +77,6 @@ def mock_dbt_task():
 def mock_workflow_builder(mock_dbt_task):
     mock_wb = Mock()
     mock_wb.get_assets_with_task_type.return_value = [mock_dbt_task]
-    mock_wb.asset_key_dbt_params_map = {
-        "test_asset": DBTParams(source_name="test_source", table_name="test_table")
-    }
     mock_wb.asset_key_partition_map = {
         "test_dbt_asset": PartitionParams(schedule_type="DAILY", start="2023-01-01"),
     }

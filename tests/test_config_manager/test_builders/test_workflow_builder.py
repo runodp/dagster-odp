@@ -42,7 +42,6 @@ SAMPLE_WORKFLOW_CONFIG = {
                 "destination_table_id": "test_dataset.test_table",
                 "job_config_params": {},
             },
-            "dbt_params": {"source_name": "test_source", "table_name": "test_table"},
         },
         {
             "asset_key": "asset2",
@@ -50,7 +49,7 @@ SAMPLE_WORKFLOW_CONFIG = {
             "params": {"selection": "test_model", "dbt_vars": {}},
         },
         {
-            "asset_key": "asset3",
+            "asset_key": "source_name/asset3",
             "task_type": "dlt",
             "params": {
                 "schema_file_path": "schemas/export/test_function.schema.yaml",
@@ -100,12 +99,7 @@ def test_asset_related_methods(workflow_builder):
     assert len(workflow_builder.asset_key_type_map) == 3
     assert workflow_builder.asset_key_type_map["asset1"] == GenericTask
     assert workflow_builder.asset_key_type_map["asset2"] == DBTTask
-    assert workflow_builder.asset_key_type_map["asset3"] == DLTTask
-
-    assert len(workflow_builder.asset_key_dbt_params_map) == 1
-    assert (
-        workflow_builder.asset_key_dbt_params_map["asset1"].source_name == "test_source"
-    )
+    assert workflow_builder.asset_key_type_map["source_name/asset3"] == DLTTask
 
     assert len(workflow_builder.asset_key_partition_map) == 3
     assert all(

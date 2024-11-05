@@ -3,7 +3,6 @@ from pathlib import Path
 from typing import Dict, List, Literal, Optional, Type, Union, overload
 
 from ..models.workflow_model import (
-    DBTParams,
     DBTTask,
     DLTTask,
     PartitionParams,
@@ -159,20 +158,6 @@ class WorkflowBuilder(BaseBuilder):
             A dictionary with asset keys as keys and task types as values.
         """
         return {asset.asset_key: type(asset) for asset in self._config.assets}
-
-    @property
-    def asset_key_dbt_params_map(self) -> Dict[str, DBTParams]:
-        """
-        Retrieves a dictionary mapping asset keys to their corresponding DBTParams.
-
-        Returns:
-            A dictionary with asset keys as keys and DBTParams as values.
-        """
-        return {
-            asset.asset_key: asset.dbt_params
-            for asset in self._config.assets
-            if asset.dbt_params
-        }
 
     @property
     def asset_key_partition_map(self) -> Dict[str, PartitionParams]:

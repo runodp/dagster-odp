@@ -137,11 +137,6 @@ class DLTParams(WorkflowParams):
         return v
 
 
-class DBTParams(BaseModel):
-    source_name: str
-    table_name: str
-
-
 class DBTTaskParams(WorkflowParams):
     selection: str
     dbt_vars: Optional[Dict[str, str]] = {}
@@ -165,7 +160,6 @@ class GenericTask(WorkflowTask):
     description: Optional[str] = ""
     group_name: Optional[str] = None
     depends_on: Optional[List[str]] = None
-    dbt_params: Optional[DBTParams] = None
 
     @field_validator("task_type")
     @classmethod
@@ -185,7 +179,6 @@ class DBTTask(WorkflowTask):
     task_type: Literal["dbt"]
     description: Literal[None] = None
     depends_on: Literal[None] = None
-    dbt_params: Literal[None] = None
     group_name: Literal[None] = None
 
 
@@ -195,7 +188,20 @@ class DLTTask(WorkflowTask):
     description: Optional[str] = ""
     group_name: Optional[str] = None
     depends_on: Literal[None] = None
-    dbt_params: Literal[None] = None
+
+    @field_validator("asset_key")
+    @classmethod
+    def validate_asset_key(cls, v: str) -> str:
+        """
+        Validates that the asset key contains at least one forward slash.
+        This ensures proper specification of both external asset name and resource name.
+        """
+        if "/" not in v:
+            raise ValueError(
+                f"DLT asset key '{v}' must contain at least one '/' to specify both "
+                "external asset name and resource name (e.g., 'github/pull_requests')"
+            )
+        return v
 
 
 Trigger = Annotated[
