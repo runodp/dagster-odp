@@ -48,7 +48,7 @@ Key features:
 
 ODP supports both YAML and JSON formats for workflow configuration files. You can split your configuration across multiple files in the `workflows` directory and mix formats as needed. Each workflow file can contain:
 
-```yaml title="workflow_config.yaml"
+```yaml title="workflow.yaml"
 # Basic workflow file structure
 assets:
   - asset_key: asset_1
@@ -200,7 +200,7 @@ ODP supports defining Dagster time-based partitions for assets through configura
 - Schedule jobs based on partition boundaries
 - Track asset materialization by time period
 
-```yaml title="workflow_config.yaml"
+```yaml title="workflow.yaml"
 partitions:
   - assets: ["monthly_data", "monthly_metrics"]
     params:
