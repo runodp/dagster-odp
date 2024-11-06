@@ -221,7 +221,7 @@ class DBTAssetCreator(BaseAssetCreator):
             all_dbt_assets.append(
                 self._build_asset(
                     exclude=partition_selection,
-                    name="unselected_dbt_assets",
+                    name="unselected_dbt_models",
                     dbt_vars={},
                 )
             )
