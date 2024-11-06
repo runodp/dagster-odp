@@ -40,7 +40,7 @@ class UrlFileDownload(BaseTask):
 
 While tasks are defined in Python, assets are created by configuring tasks in YAML/JSON. The same task can be used to create multiple different assets. For example, the `url_file_download` task can create multiple assets that download different files:
 
-```yaml
+```yaml title="workflow_config.yaml"
 assets:
   - asset_key: raw_weather_data
     task_type: url_file_download  # References our UrlFileDownload task
@@ -80,7 +80,7 @@ Assets can depend on other assets and communicate through metadata. This creates
 
 Example of dependency and metadata communication:
 
-```yaml
+```yaml title="workflow_config.yaml"
 assets:
   # Parent asset
   - asset_key: raw_data

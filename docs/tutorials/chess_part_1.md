@@ -82,7 +82,7 @@ Before we dive into the data pipeline, let's set up our Dagster project with ODP
   The `odp_config` directory will contain our Dagster ODP configuration, the `workflows` subdirectory will hold our pipeline definitions, and the `data` directory will store both our output files and the DuckDB database file.
 
 3. Update the `chess_analysis/definitions.py` file to use ODP:
-  ```python
+  ```python title="definitions.py
   from dagster_odp import build_definitions
 
   defs = build_definitions("odp_config")
@@ -128,7 +128,7 @@ Let's set up our DLT project to take advantage of these features:
 3. For ODP's DLT integration to work, we need to generate a schema file that describes the objects DLT will create. ODP uses this schema file to determine which Dagster assets to create, name the assets and set up the correct dependencies.
 
     1. Replace `chess_dlt/chess_pipeline.py` with the following code to create a schema-generating pipeline:
-    ```python hl_lines="11"
+    ```python hl_lines="11" title="chess_pipeline.py"
     import dlt
     from chess import source
 

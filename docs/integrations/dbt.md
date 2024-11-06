@@ -45,7 +45,7 @@ Regardless of the `load_all_models` setting, you can define explicit DBT assets 
 3. Pass specific variables to a set of models
 4. Configure different partitions for different model selections
 
-```yaml title="workflow_file.yaml"
+```yaml title="workflow_config.yaml"
 assets:
   - asset_key: monthly_metrics
     task_type: dbt
@@ -71,7 +71,7 @@ When `load_all_models` is false:
 
 One of ODP's key features is the ability to configure different DBT model selections with different partitions, all through configuration:
 
-```yaml title="workflow_file.yaml"
+```yaml title="workflow_config.yaml"
 assets:
   - asset_key: hourly_metrics
     task_type: dbt
@@ -115,7 +115,7 @@ This configuration:
 
 When defining a DBT asset, the `dbt_vars` parameter is passed directly to DBT's `--vars` command-line argument after variable substitution. For example:
 
-```yaml title="workflow_file.yaml"
+```yaml title="workflow_config.yaml"
 assets:
   - asset_key: transform_data
     task_type: dbt
@@ -158,7 +158,7 @@ When `external: true` is set, ODP automatically creates an external dagster asse
 
 ODP adds the full table name (including schema) to each DBT model's materialization metadata under the `destination_table_id` field. This is particularly useful for non-DBT assets that depend on DBT models:
 
-```yaml title="workflow_file.yaml"
+```yaml title="workflow_config.yaml"
 assets:
   - asset_key: export_metrics
     task_type: gcs_table_export

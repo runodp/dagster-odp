@@ -26,7 +26,7 @@ odp_config/           # Required directory name
 
 The `dagster_config` file configures resources that your pipelines will use. Only one `dagster_config` file is allowed per project (either YAML or JSON format).
 
-```yaml
+```yaml title="dagster_config.yaml"
 resources:
   - resource_kind: duckdb
     params:
@@ -48,7 +48,7 @@ Key features:
 
 ODP supports both YAML and JSON formats for workflow configuration files. You can split your configuration across multiple files in the `workflows` directory and mix formats as needed. Each workflow file can contain:
 
-```yaml
+```yaml title="workflow_config.yaml"
 # Basic workflow file structure
 assets:
   - asset_key: asset_1
@@ -200,7 +200,7 @@ ODP supports defining Dagster time-based partitions for assets through configura
 - Schedule jobs based on partition boundaries
 - Track asset materialization by time period
 
-```yaml
+```yaml title="workflow_config.yaml"
 partitions:
   - assets: ["monthly_data", "monthly_metrics"]
     params:

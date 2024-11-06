@@ -111,7 +111,7 @@ resources:
 ### Asset Configuration
 DLT assets are defined in workflow files. Here's an example configuration with explanations of each component:
 
-```yaml title="workflow_file.yaml"
+```yaml title="workflow_config.yaml"
 assets:
   - asset_key: github/api/pull_requests  # Creates source asset github/api
     task_type: dlt
@@ -185,7 +185,7 @@ Any DLT-supported destination can be used. ODP adds standardized materialization
 | Filesystem  | `destination_file_uri` | File path       |
 
 Downstream assets can access this metadata replacing `/` with `_` in the handlebar syntax:
-```yaml title="workflow_file.yaml"
+```yaml title="workflow_config.yaml"
 assets:
   - asset_key: process_pull_requests
     task_type: duckdb_query

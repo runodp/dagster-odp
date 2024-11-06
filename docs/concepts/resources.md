@@ -24,7 +24,7 @@ Resources in ODP are:
 
 Resources are defined in your `dagster_config.yaml` (or `.json`) file. Here's a basic example:
 
-```yaml
+```yaml title="dagster_config.yaml"
 resources:
   - resource_kind: duckdb
     params:
@@ -177,7 +177,7 @@ class CustomAPIResource(ConfigurableResource):
 
 Use the custom resource in your configuration:
 
-```yaml
+```yaml  title="dagster_config.yaml"
 resources:
   - resource_kind: custom_api
     params:

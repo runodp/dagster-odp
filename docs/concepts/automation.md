@@ -10,7 +10,7 @@ Jobs in ODP are defined through configuration and specify which assets to materi
 
 Jobs are defined in workflow files using YAML/JSON. Here's a basic example:
 
-```yaml
+```yaml title="workflow_config.yaml"
 jobs:
   - job_id: daily_weather_analysis
     description: "Process weather data daily"
@@ -36,7 +36,7 @@ ODP supports two types of schedules:
 
 Use cron schedules for time-based execution:
 
-```yaml
+```yaml title="workflow_config.yaml"
 jobs:
   - job_id: hourly_weather_check
     triggers:
@@ -58,7 +58,7 @@ The `cron_schedule` parameter supports:
 
 For jobs that work with partitioned assets, instead of separately defining partitions and schedules, you can use partition-based schedules that automatically align with your asset partitions:
 
-```yaml
+```yaml title="workflow_config.yaml"
 partitions:
   - assets: ["monthly_data"]
     params:
@@ -93,7 +93,7 @@ Sensors allow you to trigger jobs in response to external events. ODP provides b
 #### GCS Sensor
 Monitors Google Cloud Storage buckets for new objects and triggers runs for each new object found:
 
-```yaml
+```yaml title="workflow_config.yaml"
 jobs:
   - job_id: process_new_files
     triggers:
@@ -179,7 +179,7 @@ class APIStatusSensor(BaseSensor):
 
 Use the custom sensor in your workflow configuration:
 
-```yaml
+```yaml title="workflow_config.yaml"
 jobs:
   - job_id: status_handler
     triggers:
