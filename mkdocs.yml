@@ -35,9 +35,11 @@ nav:
     - Automation: concepts/automation.md
     - Configuration: concepts/configuration.md
   - Integrations:
-    - Overview: concepts/integrations.md
+    - Overview: integrations/integrations.md
     - DLT: integrations/dlt.md
     - DBT: integrations/dbt.md
     - Soda: integrations/soda.md
   - Reference:
     - Overview: reference/reference.md
+    - Dagster Config: reference/dagster_config.md
+    - Workflow Config: reference/workflow_config.md

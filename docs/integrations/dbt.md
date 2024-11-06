@@ -13,10 +13,9 @@ The DBT resource in ODP creates a Dagster `DbtCliResource` using configuration:
 resources:
   - resource_kind: dbt
     params:
-      project_dir: dbt_project     # Path to your DBT project
-      profile: my_profile          # Must match profiles.yml
-      target: dev                  # Target from profiles.yml
-      load_all_models: true        # ODP-specific parameter
+      project_dir: dbt_project     # Required: Path to your DBT project
+      target: dev                  # Optional: DBT target
+      load_all_models: true        # Optional: ODP-specific parameter
 ```
 
 All parameters supported by Dagster's [DbtCliResource](https://docs.dagster.io/_apidocs/libraries/dagster-dbt#cli-resource) can be used in the configuration. ODP adds one additional parameter:
