@@ -7,7 +7,6 @@ from dagster import (
     AssetSpec,
     Output,
     TimeWindowPartitionsDefinition,
-    external_assets_from_specs,
 )
 from dagster_dbt import DagsterDbtTranslator, DbtCliEventMessage, DbtProject, dbt_assets
 
@@ -73,20 +72,20 @@ class DBTAssetCreator(BaseAssetCreator):
         # Ensure project is prepared during development
         self._dbt_project.prepare_if_dev()
 
-    def build_dbt_external_sources(self) -> List[AssetsDefinition]:
+    def build_dbt_external_sources(self) -> List[AssetSpec]:
         """
-        Creates Dagster assets for any DBT sources that are marked as external
+        Creates Dagster asset specs for any DBT sources that are marked as external
         in their DBT metadata. This allows non-dagster sources to be represented
         in Dagster in the appropriate group.
 
         Returns:
-            List[AssetsDefinition]: A list of asset definitions for external sources.
+            List[AssetSpec]: A list of asset specs for external sources.
         """
         with open(self._dbt_project.manifest_path, "r", encoding="utf-8") as f:
             manifest = json.load(f)
 
         dagster_dbt_translator = DagsterDbtTranslator()
-        asset_defs = [
+        return [
             AssetSpec(
                 key=dagster_dbt_translator.get_asset_key(dbt_resource_props),
                 group_name=dagster_dbt_translator.get_group_name(dbt_resource_props),
@@ -96,7 +95,6 @@ class DBTAssetCreator(BaseAssetCreator):
             if dbt_resource_props.get("meta", {}).get("dagster", {}).get("external")
             in (True, "true", "True", "TRUE")
         ]
-        return external_assets_from_specs(asset_defs)
 
     def _get_dbt_output_metadata(self, event: DbtCliEventMessage) -> Dict:
         dest_info = event.raw_event["data"]["node_info"]["node_relation"]

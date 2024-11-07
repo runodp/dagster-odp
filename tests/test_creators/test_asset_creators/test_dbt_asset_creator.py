@@ -5,6 +5,7 @@ import pytest
 from dagster import (
     AssetExecutionContext,
     AssetKey,
+    AssetSpec,
     Output,
     TimeWindowPartitionsDefinition,
 )
@@ -130,21 +131,13 @@ def dbt_asset_creator(mock_workflow_builder, mock_config_builder, mock_dbt_proje
         return DBTAssetCreator()
 
 
-# Rest of the test functions remain the same, but update build_dbt_external_sources test:
-
-
-@patch(
-    "dagster_odp.creators.asset_creators.dbt_asset_creator.external_assets_from_specs"
-)
-def test_build_dbt_external_sources(mock_external_assets, dbt_asset_creator):
-    dbt_asset_creator.build_dbt_external_sources()
-
-    mock_external_assets.assert_called_once()
-    args = mock_external_assets.call_args[0][0]
+def test_build_dbt_external_sources(dbt_asset_creator):
+    specs = dbt_asset_creator.build_dbt_external_sources()
 
     # Only source2 is marked as external
-    assert len(args) == 1
-    assert args[0].key == AssetKey(["test_source", "source2"])
+    assert len(specs) == 1
+    assert isinstance(specs[0], AssetSpec)
+    assert specs[0].key == AssetKey(["test_source", "source2"])
 
 
 def test_custom_dagster_dbt_translator_get_metadata():

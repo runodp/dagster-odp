@@ -2,7 +2,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 import yaml
-from dagster import AssetsDefinition
+from dagster import AssetsDefinition, AssetSpec
 
 from dagster_odp.config_manager.models.workflow_model import DLTParams, DLTTask
 from dagster_odp.creators.asset_creators.dlt_asset_creator import DLTAssetCreator
@@ -158,39 +158,25 @@ def test_build_asset(
     assert kwargs["partitions_def"] is not None
 
 
-@patch("dagster_odp.creators.asset_creators.dlt_asset_creator.external_asset_from_spec")
 @patch.object(DLTAssetCreator, "_build_asset")
-def test_get_assets(
-    mock_build_asset, mock_external_asset_from_spec, dlt_asset_creator, dlt_task
-):
+def test_get_assets(mock_build_asset, dlt_asset_creator, dlt_task):
     dlt_asset_creator._wb.get_assets_with_task_type.return_value = [dlt_task]
-
-    mock_build_asset.return_value = Mock(spec=AssetsDefinition)
-    mock_external_asset_from_spec.return_value = Mock(spec=AssetsDefinition)
+    mock_dlt_asset = Mock(spec=AssetsDefinition)
+    mock_build_asset.return_value = mock_dlt_asset
 
     result = dlt_asset_creator.get_assets()
 
-    assert len(result) == 2  # 1 external asset + 1 DLT asset
-    assert mock_external_asset_from_spec.call_count == 1
-    assert mock_build_asset.call_count == 1
-
-    # Check that the result includes both the external asset and the built asset
-    assert result[0] == mock_external_asset_from_spec.return_value
-    assert result[1] == mock_build_asset.return_value
-
-    # Check that _build_asset was called with the correct dlt_path
-    mock_build_asset.assert_called_once_with(
-        dlt_asset_creator._wb.get_assets_with_task_type.return_value[0],
-        "/path/to/dlt_project",
-    )
+    # Verify we get one external AssetSpec and one DLT asset
+    assert len(result) == 2
+    assert isinstance(result[0], AssetSpec)
+    assert result[1] is mock_dlt_asset
+    mock_build_asset.assert_called_once_with(dlt_task, "/path/to/dlt_project")
 
 
-@patch("dagster_odp.creators.asset_creators.dlt_asset_creator.external_asset_from_spec")
 @patch.object(DLTAssetCreator, "_build_asset")
-def test_get_assets_with_duplicate_externals(
-    mock_build_asset, mock_external_asset_from_spec, dlt_asset_creator, dlt_task
+def test_get_assets_deduplicates_external_assets(
+    mock_build_asset, dlt_asset_creator, dlt_task
 ):
-    # Create second task with same external prefix but different asset name
     dlt_task2 = DLTTask(
         asset_key="test/abc/another_asset",  # Same prefix as dlt_task (test/abc)
         task_type="dlt",
@@ -206,16 +192,12 @@ def test_get_assets_with_duplicate_externals(
     )
 
     dlt_asset_creator._wb.get_assets_with_task_type.return_value = [dlt_task, dlt_task2]
-    mock_build_asset.side_effect = [Mock(spec=AssetsDefinition) for _ in range(2)]
-    mock_external_asset_from_spec.return_value = Mock(spec=AssetsDefinition)
+    mock_assets = [Mock(spec=AssetsDefinition), Mock(spec=AssetsDefinition)]
+    mock_build_asset.side_effect = mock_assets
 
     result = dlt_asset_creator.get_assets()
 
-    # Verify external asset created only once despite having two tasks
-    mock_external_asset_from_spec.assert_called_once()
-
-    # Verify both DLT assets were built
-    assert mock_build_asset.call_count == 2
-
-    # Verify correct number of total assets (1 external + 2 DLT)
+    # Verify: one external asset + two DLT assets = 3 total assets
     assert len(result) == 3
+    assert isinstance(result[0], AssetSpec)
+    assert result[1:] == mock_assets

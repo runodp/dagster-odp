@@ -9,7 +9,6 @@ from dagster import (
     AssetSpec,
     MaterializeResult,
     TimeWindowPartitionsDefinition,
-    external_asset_from_spec,
     multi_asset,
 )
 
@@ -162,12 +161,10 @@ class DLTAssetCreator(BaseAssetCreator):
                     and external_asset_key not in created_external_keys
                 ):
                     external_assets.append(
-                        external_asset_from_spec(
-                            AssetSpec(
-                                key=external_asset_key,
-                                group_name=asset.group_name,
-                                description=asset.description,
-                            )
+                        AssetSpec(
+                            key=external_asset_key,
+                            group_name=asset.group_name,
+                            description=asset.description,
                         )
                     )
                     created_external_keys.add(external_asset_key)
