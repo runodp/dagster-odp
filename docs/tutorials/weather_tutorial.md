@@ -261,8 +261,9 @@ Congratulations! You've built a real-world data pipeline using Dagster ODP. This
 
 ## Next Steps
 
-- Explore other ODP task types in the documentation to see what other operations you can perform.
-- Learn about [scheduling](../concepts/schedules.md) your ODP pipeline to run on a regular basis.
-- Investigate how to [test your ODP pipelines](../concepts/testing.md) to ensure data quality and pipeline reliability.
-
-For more detailed explanations of the concepts used here, check out our [Concepts](../concepts/concepts.md) section.
+- Try the [Chess Data Analysis Tutorial](../tutorials/chess_part_1.md) for a more advanced example using DLT, DBT, and Soda
+- Explore core concepts in depth:
+  - [Tasks and Assets](../concepts/tasks_and_assets.md) for building custom pipeline components
+  - [Resources](../concepts/resources.md) for managing external connections
+  - [Automation](../concepts/automation.md) for scheduling and event-driven pipelines
+- Learn about ODP's integrations with [DLT](../integrations/dlt.md), [DBT](../integrations/dbt.md), and [Soda](../integrations/soda.md)

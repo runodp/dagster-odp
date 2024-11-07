@@ -108,7 +108,7 @@ Key features:
 
 #### DBT Resource
 
-Enhances Dagster's DBT integration with additional features. [Learn more →](integrations/dbt.md)
+Enhances Dagster's DBT integration with additional features. [Learn more →](../integrations/dbt.md)
 
 ```yaml
 resource_kind: dbt
@@ -127,7 +127,7 @@ ODP-specific enhancements:
 - Partition support
 
 #### Soda Resource
-Configures Soda for data quality checks. [Learn more →](integrations/soda.md)
+Configures Soda for data quality checks. [Learn more →](../integrations/soda.md)
 
 ```yaml
 resource_kind: soda

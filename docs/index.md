@@ -28,7 +28,3 @@ Once you're familiar with the basics, explore these areas to make the most of Da
 - [Concepts](concepts/concepts.md): Deepen your understanding of Dagster ODP's fundamental ideas including tasks, resources, and configuration.
 - [Integrations](integrations/integrations.md): Learn about ODP's enhanced integrations with DLT, DBT, and Soda.
 - [Reference](reference/reference.md): Comprehensive details on all features and configurations.
-
-## Community and Support
-
-Need help or want to contribute? Check out our [Community](community.md) page for resources and ways to get involved.
