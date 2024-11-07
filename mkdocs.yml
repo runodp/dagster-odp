@@ -35,6 +35,7 @@ nav:
     - Resources: concepts/resources.md
     - Automation: concepts/automation.md
     - Configuration: concepts/configuration.md
+    - Generating Definitions: concepts/definitions.md
   - Integrations:
     - Overview: integrations/integrations.md
     - DLT: integrations/dlt.md

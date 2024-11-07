@@ -52,6 +52,15 @@ ODP's configuration system ties everything together:
 
 [Learn more about Configuration →](configuration.md)
 
+### Generating Definitions
+
+Bridge between configuration and Dagster:
+
+- Generate Dagster definitions from ODP configuration
+- Combine ODP with existing Dagster code
+
+[Learn more about Generating Definitions →](definitions.md)
+
 ## Deep Dives
 
 Each concept page provides an in-depth exploration of its topic, including detailed examples, best practices, and technical details. For integration with external tools like DLT, DBT, and Soda, see the [Integrations](../integrations/integrations.md) section.
