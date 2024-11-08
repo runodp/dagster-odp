@@ -2,13 +2,7 @@
 
 In this final part of our tutorial, we'll implement the analytical layer of our pipeline using DBT and export the results. We'll be working with this portion of our pipeline:
 
-```mermaid
-graph TD
- E[players_games:DuckDB] --> G[monthly_player_stats:DuckDB]
- G --> H[monthly_players_profiles:DuckDB]
- B[players_profiles:DuckDB] --> H
- H --> J[export_monthly_data]
-```
+![Chess Pipeline Part 3](../assets/chess_pipeline_part_3.svg)
 
 We'll create DBT models to:
 

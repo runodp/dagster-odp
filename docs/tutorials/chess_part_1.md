@@ -25,16 +25,8 @@ Before diving into the pipeline construction, ensure you have Dagster ODP instal
 
 Let's examine the structure of the pipeline we're about to construct:
 
-```mermaid
-graph TD
- A[players_profiles] --> B[players_profiles:DuckDB] 
- D[players_games] --> E[players_games:DuckDB] 
- E --> F[Soda DQ check:DuckDB]
- F --> G[monthly_player_stats:DuckDB]
- G --> H[monthly_players_profiles:DuckDB]
- B --> H
- H --> J[export table]
-```
+![Chess Analysis Pipeline](../assets/chess_pipeline.svg)
+
 This diagram illustrates our planned pipeline:
 
 1. **Player Profile Ingestion**
@@ -95,10 +87,7 @@ Now that we have our project set up, let's move on to setting up DLT for data in
 
 In this step, we'll focus on loading player profiles into DuckDB using DLT. This is a one-time load that won't be scheduled. We'll be working on this portion of the pipeline:
 
-```mermaid
-graph LR
- A[players_profiles] --> B[players_profiles:DuckDB] 
-```
+![Chess Pipeline Part 1](../assets/chess_pipeline_part_1.svg)
 
 ### Setting Up DLT
 

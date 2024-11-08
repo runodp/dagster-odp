@@ -2,11 +2,7 @@
 
 In this section of our tutorial, we'll focus on setting up a monthly load for player games data and implementing data quality checks. We'll be working with this portion of our pipeline:
 
-```mermaid
-graph LR
- D[players_games] --> E[players_games:DuckDB]
- E --> F[Soda DQ check:DuckDB]
-```
+![Chess Pipeline Part 2](../assets/chess_pipeline_part_2.svg)
 
 We'll configure a partitioned asset for player games data, set up a monthly scheduled job to keep our dataset up-to-date, and implement Soda checks to ensure data quality.
 
