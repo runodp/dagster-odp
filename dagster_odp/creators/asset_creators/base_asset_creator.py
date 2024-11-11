@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Sequence
+from typing import Sequence, Union
 
 from dagster import AssetsDefinition, AssetSpec
 
@@ -30,7 +30,7 @@ class BaseAssetCreator(ABC):
         self._resource_class_map = cb.resource_class_map
 
     @abstractmethod
-    def get_assets(self) -> Sequence[AssetsDefinition | AssetSpec]:
+    def get_assets(self) -> Sequence[Union[AssetsDefinition, AssetSpec]]:
         """
         Retrieves or builds a list of asset definitions.
 
@@ -39,7 +39,7 @@ class BaseAssetCreator(ABC):
         their asset type.
 
         Returns:
-            List[AssetsDefinition]: A list of Dagster AssetsDefinition objects
-            representing the assets managed by this asset manager.
+            List[AssetsDefinition | AssetSpec]: A list of Dagster AssetsDefinition
+                objects representing the assets managed by this asset manager.
         """
         raise NotImplementedError("Subclasses must implement get_assets method")

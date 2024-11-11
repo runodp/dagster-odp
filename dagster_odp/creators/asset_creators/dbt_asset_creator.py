@@ -1,5 +1,5 @@
 import json
-from typing import Any, Dict, Iterator, List, Mapping, Optional
+from typing import Any, Dict, Iterator, List, Mapping, Optional, Union
 
 from dagster import (
     AssetExecutionContext,
@@ -169,7 +169,7 @@ class DBTAssetCreator(BaseAssetCreator):
 
         return _dbt_assets
 
-    def get_assets(self) -> List[AssetsDefinition | AssetSpec]:
+    def get_assets(self) -> List[Union[AssetsDefinition, AssetSpec]]:
         """
         Creates all DBT asset definitions based on configuration.
 
@@ -183,7 +183,7 @@ class DBTAssetCreator(BaseAssetCreator):
         for different parts of your DBT project.
 
         Returns:
-            List[AssetsDefinition]: A list containing:
+            List[AssetsDefinition | AssetSpec]: A list containing:
                 - Individual asset definitions for each configured DBT asset
                 - An 'unselected_dbt_assets' asset for remaining models (if enabled)
                 - External source asset definitions
