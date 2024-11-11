@@ -169,7 +169,7 @@ class DBTAssetCreator(BaseAssetCreator):
 
         return _dbt_assets
 
-    def get_assets(self) -> List[AssetsDefinition]:
+    def get_assets(self) -> List[AssetsDefinition | AssetSpec]:
         """
         Creates all DBT asset definitions based on configuration.
 

@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
-from typing import List
+from typing import Sequence
 
-from dagster import AssetsDefinition
+from dagster import AssetsDefinition, AssetSpec
 
 from ...config_manager.builders import ConfigBuilder, WorkflowBuilder
 
@@ -30,7 +30,7 @@ class BaseAssetCreator(ABC):
         self._resource_class_map = cb.resource_class_map
 
     @abstractmethod
-    def get_assets(self) -> List[AssetsDefinition]:
+    def get_assets(self) -> Sequence[AssetsDefinition | AssetSpec]:
         """
         Retrieves or builds a list of asset definitions.
 
