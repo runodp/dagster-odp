@@ -1,6 +1,6 @@
 from collections import defaultdict
 from datetime import datetime
-from typing import Any, Callable, Dict, List, TypeVar
+from typing import Any, Callable, Dict, List, TypeVar, Union
 
 import chevron
 from dagster import (
@@ -44,7 +44,7 @@ class ConfigParamReplacer:
     def __init__(
         self,
         context: AssetExecutionContext,
-        depends_on: List[str] | None,
+        depends_on: Union[List[str], None],
         resource_config: Dict,
     ):
         self.context = context

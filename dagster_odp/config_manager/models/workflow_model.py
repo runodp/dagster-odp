@@ -1,5 +1,5 @@
 # pylint: disable=C0115,C0116
-from typing import Any, Dict, List, Literal, Optional, Set, TypeAlias, Union
+from typing import Any, Dict, List, Literal, Optional, Set, Union
 
 from croniter import croniter
 from pydantic import (
@@ -12,7 +12,7 @@ from pydantic import (
     field_validator,
     model_validator,
 )
-from typing_extensions import Annotated, Self
+from typing_extensions import Annotated, Self, TypeAlias
 
 from ...sensors.manager.sensor_registry import sensor_registry
 from ...tasks.manager.task_registry import task_registry
