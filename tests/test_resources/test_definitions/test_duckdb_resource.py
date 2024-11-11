@@ -29,7 +29,8 @@ def test_duckdb_resource_get_connection_invalid_path():
 
     with pytest.raises(
         ValueError,
-        match="Invalid path: /nonexistent/path/to/invalid.db. Directory does not exist.",
+        match="Invalid path: /nonexistent/path/to/invalid.db. "
+        "Directory does not exist.",
     ):
         with resource.get_connection():
             pass
