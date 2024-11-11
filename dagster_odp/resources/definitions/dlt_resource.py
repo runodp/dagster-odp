@@ -3,6 +3,7 @@ import os
 import sys
 from typing import Any, Dict, Iterator, List, Mapping, Union
 
+import tomli
 from dagster import (
     AssetExecutionContext,
     AssetKey,
@@ -12,8 +13,6 @@ from dagster import (
 from dlt import destinations, pipeline
 from dlt.common.pipeline import LoadInfo
 from dlt.extract.source import DltSource
-
-import tomli
 
 from ..resource_registry import odp_resource
 from .utils import update_asset_params
