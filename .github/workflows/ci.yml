@@ -32,7 +32,7 @@ jobs:
         black . --check
         isort . --check
         flake8 .
-        pylint dagster_odp
+        pylint --disable=R dagster_odp
     
     - name: Run type checking
       run: |

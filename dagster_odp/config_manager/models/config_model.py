@@ -1,5 +1,6 @@
 # pylint: disable=C0115,C0116
-from typing import Any, List, Self
+from typing import Any, List
+from typing_extensions import Self
 
 from pydantic import BaseModel, field_validator, model_validator
 

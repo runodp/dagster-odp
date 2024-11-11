@@ -2,7 +2,8 @@ import json
 import os
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Any, Dict, Optional, Self
+from typing import Any, Dict, Optional
+from typing_extensions import Self
 
 import yaml
 
@@ -71,7 +72,6 @@ class BaseBuilder(ABC):
         with file_path.open("r", encoding="utf-8") as file:
             if file_path.suffix.lower() in (".yml", ".yaml"):
                 return yaml.safe_load(file)
-            elif file_path.suffix.lower() == ".json":
+            if file_path.suffix.lower() == ".json":
                 return json.load(file)
-            else:
-                raise ValueError(f"Unsupported file format: {file_path.suffix}")
+            raise ValueError(f"Unsupported file format: {file_path.suffix}")

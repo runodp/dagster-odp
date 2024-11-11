@@ -1,7 +1,6 @@
 import importlib
 import os
 import sys
-import tomllib
 from typing import Any, Dict, Iterator, List, Mapping, Union
 
 from dagster import (
@@ -13,6 +12,8 @@ from dagster import (
 from dlt import destinations, pipeline
 from dlt.common.pipeline import LoadInfo
 from dlt.extract.source import DltSource
+
+import tomli
 
 from ..resource_registry import odp_resource
 from .utils import update_asset_params
@@ -163,7 +164,7 @@ class OdpDltResource(ConfigurableResource):
         if not os.path.exists(secrets_path):
             raise FileNotFoundError(f"File not found: {secrets_path}")
         with open(secrets_path, "rb") as f:
-            secrets = tomllib.load(f)
+            secrets = tomli.load(f)
 
         # Flatten the nested dictionary
         flat_secrets = self._flatten_dict(secrets)
