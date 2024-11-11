@@ -76,7 +76,7 @@ defs = build_definitions("odp_config")
 
 Check out our [Quickstart Guide](https://dagster-odp.github.io/docs/getting-started/quickstart/) for a complete walkthrough.
 
-## Who Should Use ODP?
+## Who Should Use Dagster ODP?
 
 - **Data Teams** seeking to standardize pipeline creation
 - **Data Analysts/Scientists** who want to create pipelines without extensive coding
@@ -87,10 +87,10 @@ Check out our [Quickstart Guide](https://dagster-odp.github.io/docs/getting-star
 
 Comprehensive documentation is available at [dagster-odp.github.io/docs](https://dagster-odp.github.io/docs/), including:
 
-- [Concepts Guide](https://dagster-odp.github.io/docs/concepts/concepts/)
 - [Tutorials](https://dagster-odp.github.io/docs/tutorials/tutorials/)
-- [Reference Documentation](https://dagster-odp.github.io/docs/reference/reference/)
+- [Concepts Guide](https://dagster-odp.github.io/docs/concepts/concepts/)
 - [Integration Guides](https://dagster-odp.github.io/docs/integrations/integrations/)
+- [Reference Documentation](https://dagster-odp.github.io/docs/reference/reference/)
 
 ## Contributing
 
