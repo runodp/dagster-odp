@@ -147,17 +147,17 @@ def test_flatten_dict(odp_dlt_resource):
     assert flattened == {"a": 1, "b__c": 2, "b__d__e": 3}
 
 
-@patch("tomllib.load")
+@patch("tomli.load")  # Changed from tomllib to tomli
 @patch("builtins.open", new_callable=mock_open)
 @patch.dict(os.environ, {}, clear=True)
 @patch("os.path.exists")
 def test_write_dlt_secrets_to_env(
-    mock_exists, mock_open, mock_tomllib_load, odp_dlt_resource
+    mock_exists, mock_open, mock_tomli_load, odp_dlt_resource
 ):
     # Mock os.path.exists to return True for our test file
     mock_exists.return_value = True
 
-    mock_tomllib_load.return_value = {
+    mock_tomli_load.return_value = {
         "section1": {"key1": "value1", "key2": "value2"},
         "section2": {"key3": "value3"},
     }
