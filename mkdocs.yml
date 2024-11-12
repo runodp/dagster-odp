@@ -1,5 +1,5 @@
 site_name: dagster-odp
-site_url: https://dagster-odp.github.io/docs
+site_url: https://runodp.github.io/dagster-odp
 theme:
   name: material
   features:
