@@ -74,7 +74,7 @@ defs = build_definitions("odp_config")
 
 4. Start building pipelines in your workflows directory using YAML/JSON configuration.
 
-Check out our [Quickstart Guide](https://dagster-odp.github.io/docs/getting-started/quickstart/) for a complete walkthrough.
+Check out our [Quickstart Guide](https://runodp.github.io/dagster-odp/getting-started/quickstart/) for a complete walkthrough.
 
 ## Who Should Use dagster-odp?
 
@@ -85,12 +85,12 @@ Check out our [Quickstart Guide](https://dagster-odp.github.io/docs/getting-star
 
 ## Documentation
 
-Comprehensive documentation is available at [dagster-odp.github.io/docs](https://dagster-odp.github.io/docs/), including:
+[Comprehensive documentation](https://runodp.github.io/dagster-odp/) is available, including:
 
-- [Tutorials](https://dagster-odp.github.io/docs/tutorials/tutorials/)
-- [Concepts Guide](https://dagster-odp.github.io/docs/concepts/concepts/)
-- [Integration Guides](https://dagster-odp.github.io/docs/integrations/integrations/)
-- [Reference Documentation](https://dagster-odp.github.io/docs/reference/reference/)
+- [Tutorials](https://runodp.github.io/dagster-odp/tutorials/tutorials/)
+- [Concepts Guide](https://runodp.github.io/dagster-odp/concepts/concepts/)
+- [Integration Guides](https://runodp.github.io/dagster-odp/integrations/integrations/)
+- [Reference Documentation](https://runodp.github.io/dagster-odp/reference/reference/)
 
 ## Contributing
 
