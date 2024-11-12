@@ -167,7 +167,7 @@ def test_consolidate_workflow_data(tmp_path):
         "assets": [
             {
                 "asset_key": "third_asset",
-                "task_type": "gcs_file_to_bq",  # Changed from "custom_task" to a known task type
+                "task_type": "gcs_file_to_bq",
                 "params": {
                     "source_file_uri": "gs://test-bucket/test-file.parquet",
                     "destination_table_id": "test_dataset.another_table",

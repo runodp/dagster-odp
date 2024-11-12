@@ -50,8 +50,44 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "pytest>=8.3.3,<9.0.0",
-    "coverage>=7.0.0",
     "freezegun>=1.5.1,<2.0.0",
     "mkdocs-material>=9.5.39,<10.0.0",
-    "mkdocs-glightbox>=0.4.0,<0.5.0"
+    "mkdocs-glightbox>=0.4.0,<0.5.0",
+    
+    # Code quality tools
+    "black>=24.10.0",
+    "flake8>=7.1.1",
+    "flake8-bugbear>=24.10.31",
+    "isort>=5.13.2",
+    "mypy>=1.13.0",
+    "pylint>=3.3.1",
+    
+    # Coverage reporting
+    "pytest-cov>=6.0.0",
+]
+
+[tool.isort]
+profile = "black"
+
+[tool.mypy]
+python_version = "3.9"
+disallow_untyped_defs = true
+disable_error_code = "import-untyped"
+exclude = ["tests/"]
+
+[tool.pytest.ini_options]
+addopts = "--cov=dagster_odp --cov-report=xml --cov-report=term-missing"
+testpaths = ["tests"]
+
+[tool.pylint.main]
+recursive = true
+ignore-paths = ["tests"]
+
+[tool.pylint.format]
+max-line-length = 88
+
+[tool.pylint."messages control"]
+disable = [
+    "W0511",  # Disable TODO/FIXME warnings
+    "C0114",  # Disable missing-module-docstring
 ]

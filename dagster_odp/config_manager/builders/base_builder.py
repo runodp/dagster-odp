@@ -2,9 +2,10 @@ import json
 import os
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Any, Dict, Optional, Self
+from typing import Any, Dict, Optional
 
 import yaml
+from typing_extensions import Self
 
 
 class BaseBuilder(ABC):
@@ -23,7 +24,7 @@ class BaseBuilder(ABC):
         get_config: Abstract method to retrieve the loaded configuration.
     """
 
-    _instance: Self | None = None
+    _instance: Optional[Self] = None
 
     def __new__(cls, *args: Any, **kwargs: Any) -> Self:
         if cls._instance is None:
@@ -71,7 +72,6 @@ class BaseBuilder(ABC):
         with file_path.open("r", encoding="utf-8") as file:
             if file_path.suffix.lower() in (".yml", ".yaml"):
                 return yaml.safe_load(file)
-            elif file_path.suffix.lower() == ".json":
+            if file_path.suffix.lower() == ".json":
                 return json.load(file)
-            else:
-                raise ValueError(f"Unsupported file format: {file_path.suffix}")
+            raise ValueError(f"Unsupported file format: {file_path.suffix}")

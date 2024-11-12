@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Iterator
+from typing import Any, Dict, Iterator, Optional, Union
 
 from dagster import RunRequest, SensorEvaluationContext, SkipReason
 from pydantic import BaseModel, PrivateAttr
@@ -19,12 +19,12 @@ class BaseSensor(ABC, BaseModel):
     """
 
     _context: SensorEvaluationContext = PrivateAttr()
-    _cursor: str | None = PrivateAttr()
+    _cursor: Optional[str] = PrivateAttr()
     _resources: Dict[str, Any] = PrivateAttr()
 
     def evaluate(
         self, context: SensorEvaluationContext
-    ) -> Iterator[SkipReason | RunRequest]:
+    ) -> Iterator[Union[SkipReason, RunRequest]]:
         """
         Initialize context and execute the sensor's evaluation logic.
 
@@ -40,7 +40,7 @@ class BaseSensor(ABC, BaseModel):
         return self.run()
 
     @abstractmethod
-    def run(self) -> Iterator[SkipReason | RunRequest]:
+    def run(self) -> Iterator[Union[SkipReason, RunRequest]]:
         """
         Execute the sensor's evaluation logic. This method should be implemented
         by subclasses to define the specific sensor behavior.

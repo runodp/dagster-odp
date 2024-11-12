@@ -1,4 +1,4 @@
-from typing import Any, Generator, Optional
+from typing import Any, Generator, Optional, Union
 
 from dagster import RunRequest, SkipReason
 from dagster_gcp.gcs.sensor import get_gcs_keys
@@ -25,7 +25,7 @@ class GCSSensor(BaseSensor):
     bucket_name: str
     path_prefix_filter: Optional[str] = None
 
-    def run(self) -> Generator[RunRequest, Any, SkipReason | None]:
+    def run(self) -> Generator[RunRequest, Any, Union[SkipReason, None]]:
         client = self._resources["gcs"]
         new_gcs_objects = get_gcs_keys(
             self.bucket_name, since_key=self._cursor, gcs_session=client

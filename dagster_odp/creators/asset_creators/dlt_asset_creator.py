@@ -1,5 +1,5 @@
 import os
-from typing import Dict, Iterator, List, Optional, Set
+from typing import Dict, Iterator, List, Optional, Set, Union
 
 import yaml
 from dagster import (
@@ -26,7 +26,8 @@ class DLTAssetCreator(BaseAssetCreator):
     specifically for DLT assets.
 
     Attributes:
-        _dlt_assets (List[AssetsDefinition]): A list to store DLT asset definitions.
+        _dlt_assets (List[AssetsDefinition | AssetSpec]): A list of DLT asset
+            definitions or specs.
 
     Methods:
         __init__: Initializes the DLTAssetCreator.
@@ -37,7 +38,7 @@ class DLTAssetCreator(BaseAssetCreator):
 
     def __init__(self) -> None:
         super().__init__()
-        self._dlt_assets: List[AssetsDefinition] = []
+        self._dlt_assets: List[Union[AssetsDefinition, AssetSpec]] = []
 
     def _get_dlt_destination_objects(
         self,
@@ -129,7 +130,7 @@ class DLTAssetCreator(BaseAssetCreator):
 
         return _dlt_asset_defs
 
-    def get_assets(self) -> List[AssetsDefinition]:
+    def get_assets(self) -> List[Union[AssetsDefinition, AssetSpec]]:
         """
         Retrieves the DLT asset definitions.
 
@@ -142,8 +143,8 @@ class DLTAssetCreator(BaseAssetCreator):
         They also do not support being partitioned, but this could be implemented.
 
         Returns:
-            List[AssetsDefinition]: A list of DLT asset definitions, including external
-                                    asset specs and the built DLT assets.
+            List[AssetsDefinition | AssetSpec]: A list of DLT asset definitions,
+                including external asset specs and the built DLT assets.
         """
         if not self._dlt_assets:
             dlt_assets = self._wb.get_assets_with_task_type(DLTTask)
@@ -151,7 +152,7 @@ class DLTAssetCreator(BaseAssetCreator):
                 raise ValueError("Resource config must contain dlt resource config.")
             dlt_path = self._resource_class_map["dlt"].project_dir
 
-            external_assets = []
+            external_assets: List[AssetSpec] = []
             created_external_keys: Set[tuple] = set()
 
             for asset in dlt_assets:
