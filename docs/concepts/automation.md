@@ -1,6 +1,6 @@
 # Automation
 
-Dagster ODP provides a configuration-driven way to automate your data pipelines through jobs, schedules, and sensors. This page explains how to use these automation features effectively.
+dagster-odp provides a configuration-driven way to automate your data pipelines through jobs, schedules, and sensors. This page explains how to use these automation features effectively.
 
 ## Jobs
 

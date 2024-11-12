@@ -1,6 +1,6 @@
 # Soda Integration
 
-Dagster ODP allows you to create Dagster asset checks powered by Soda Core through configuration. This integration translates Soda check configurations into Dagster asset checks without requiring Python code.
+dagster-odp allows you to create Dagster asset checks powered by Soda Core through configuration. This integration translates Soda check configurations into Dagster asset checks without requiring Python code.
 
 !!!info "Prerequisites"
     This guide assumes familiarity with Soda Core concepts and syntax. If you're new to Soda, we recommend reading the [Soda Core documentation](https://docs.soda.io/soda-core/overview.html) first.

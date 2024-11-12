@@ -1,6 +1,6 @@
 # DBT Integration
 
-Dagster ODP provides a configuration-driven approach to using Dagster's DBT integration. While Dagster already offers comprehensive DBT support, ODP makes it easier to configure and manage DBT assets through YAML/JSON configuration rather than Python code.
+dagster-odp provides a configuration-driven approach to using Dagster's DBT integration. While Dagster already offers comprehensive DBT support, ODP makes it easier to configure and manage DBT assets through YAML/JSON configuration rather than Python code.
 
 !!!info "Prerequisites"
     This guide assumes familiarity with DBT and Dagster's DBT integration. If you're new to DBT, we recommend reading the [DBT Documentation](https://docs.getdbt.com/docs/introduction) first.

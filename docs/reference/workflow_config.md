@@ -1,6 +1,6 @@
 # Workflow Configuration Reference
 
-Workflow files define the pipelines in your Dagster ODP project through assets, jobs, partitions, and data quality checks. Unlike the `dagster_config` file, you can have multiple workflow files in YAML or JSON format. For a broader understanding of ODP's configuration system, see the [Configuration](../concepts/configuration.md) documentation.
+Workflow files define the pipelines in your dagster-odp project through assets, jobs, partitions, and data quality checks. Unlike the `dagster_config` file, you can have multiple workflow files in YAML or JSON format. For a broader understanding of ODP's configuration system, see the [Configuration](../concepts/configuration.md) documentation.
 
 ## Overview
 

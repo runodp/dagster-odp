@@ -1,6 +1,6 @@
 # DLT Integration
 
-Dagster ODP provides an enhanced integration with DLT (Data Load Tool) for configuration-driven data ingestion. Using the GitHub API ingestion example from our [Chess Data Analysis Tutorial](../tutorials/chess_part_1.md) as a reference, this guide explains the components and capabilities of ODP's DLT integration.
+dagster-odp provides an enhanced integration with DLT (Data Load Tool) for configuration-driven data ingestion. Using the GitHub API ingestion example from our [Chess Data Analysis Tutorial](../tutorials/chess_part_1.md) as a reference, this guide explains the components and capabilities of ODP's DLT integration.
 
 !!!info "Prerequisites"
     This guide assumes familiarity with DLT's core concepts and operations. If you're new to DLT, we recommend reading [How DLT Works](https://dlthub.com/docs/reference/explainers/how-dlt-works) before continuing.

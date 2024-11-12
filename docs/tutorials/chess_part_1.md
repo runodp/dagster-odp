@@ -1,6 +1,6 @@
 # Chess Data Analysis Tutorial (Advanced) - Part 1: Initial Setup and Data Load
 
-In this advanced tutorial, we'll construct a data pipeline using Dagster ODP to analyze chess game data from chess.com. Our pipeline will leverage several powerful tools in the modern data stack:
+In this advanced tutorial, we'll construct a data pipeline using dagster-odp to analyze chess game data from chess.com. Our pipeline will leverage several powerful tools in the modern data stack:
 
 - DLT for efficient data ingestion
 - DuckDB for high-performance storage and processing
@@ -19,7 +19,7 @@ By the end of this tutorial, you'll have created a pipeline that calculates the 
 
     If you're new to any of these tools, we recommend exploring their documentation before proceeding.
 
-Before diving into the pipeline construction, ensure you have Dagster ODP installed (refer to the [Quickstart Guide](../getting-started/quickstart.md) for installation instructions).
+Before diving into the pipeline construction, ensure you have dagster-odp installed (refer to the [Quickstart Guide](../getting-started/quickstart.md) for installation instructions).
 
 ## Pipeline Overview
 
@@ -64,14 +64,14 @@ Before we dive into the data pipeline, let's set up our Dagster project with ODP
   dagster project scaffold --name chess_analysis
   cd chess_analysis
   ```
-  This command creates a basic Dagster project structure. We'll modify it to use Dagster ODP.
+  This command creates a basic Dagster project structure. We'll modify it to use dagster-odp.
 
 2. Create the necessary directories for our project:
   ```bash
   mkdir -p odp_config/workflows
   mkdir data
   ```
-  The `odp_config` directory will contain our Dagster ODP configuration, the `workflows` subdirectory will hold our pipeline definitions, and the `data` directory will store both our output files and the DuckDB database file.
+  The `odp_config` directory will contain our dagster-odp configuration, the `workflows` subdirectory will hold our pipeline definitions, and the `data` directory will store both our output files and the DuckDB database file.
 
 3. Update the `chess_analysis/definitions.py` file to use ODP:
   ```python title="definitions.py
@@ -79,7 +79,7 @@ Before we dive into the data pipeline, let's set up our Dagster project with ODP
 
   defs = build_definitions("odp_config")
   ```
-  This tells Dagster ODP to use our configuration files in the `odp_config` directory to build the Dagster definitions. Dagster ODP will convert our YAML configurations into the corresponding Dagster components (assets, resources, and jobs).
+  This tells dagster-odp to use our configuration files in the `odp_config` directory to build the Dagster definitions. dagster-odp will convert our YAML configurations into the corresponding Dagster components (assets, resources, and jobs).
 
 Now that we have our project set up, let's move on to setting up DLT for data ingestion.
 
@@ -231,6 +231,6 @@ In the Dagster UI, navigate to the `chess_com/chess_data/players_profiles` asset
 
 ## Conclusion
 
-In this first part of our tutorial, we've set up our Dagster ODP project and implemented the initial data load for player profiles. We've seen how ODP simplifies the process of integrating DLT with Dagster, allowing us to define complex data ingestion tasks using simple YAML configuration.
+In this first part of our tutorial, we've set up our dagster-odp project and implemented the initial data load for player profiles. We've seen how ODP simplifies the process of integrating DLT with Dagster, allowing us to define complex data ingestion tasks using simple YAML configuration.
 
 In the next part, we'll expand our pipeline to include monthly game data loads, implement data quality checks using Soda, and start building our analysis pipeline using DBT. We'll see how ODP's integrations with these tools allow us to create a robust, maintainable data pipeline with minimal code.

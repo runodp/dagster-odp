@@ -1,6 +1,6 @@
 # Concepts Overview
 
-This section provides in-depth explanations of Dagster ODP's core concepts and components. Understanding these concepts will help you build data pipelines using ODP's configuration-driven approach.
+This section provides in-depth explanations of dagster-odp's core concepts and components. Understanding these concepts will help you build data pipelines using ODP's configuration-driven approach.
 
 ## Core Components
 

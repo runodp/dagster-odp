@@ -1,6 +1,6 @@
-# Quickstart: Your First Dagster ODP Project
+# Quickstart: Your First dagster-odp Project
 
-This quickstart guide will walk you through setting up a simple project that echoes "Hello, Dagster ODP!" to the console. By the end, you'll have a working Dagster ODP setup and understand the basics of creating assets.
+This quickstart guide will walk you through setting up a simple project that echoes "Hello, dagster-odp!" to the console. By the end, you'll have a working dagster-odp setup and understand the basics of creating assets.
 
 ## Prerequisites
 
@@ -12,7 +12,7 @@ This quickstart guide will walk you through setting up a simple project that ech
 Let's start by installing the necessary packages:
 
 ```bash
-# Install Dagster ODP, preferably in a virtual environment
+# Install dagster-odp, preferably in a virtual environment
 pip install git+https://github.com/runodp/dagster-odp.git
 ```
 
@@ -25,9 +25,9 @@ dagster project scaffold --name my-dagster-odp-project
 cd my-dagster-odp-project
 ```
 
-## 3. Set Up Dagster ODP Configuration
+## 3. Set Up dagster-odp Configuration
 
-Create the necessary directories for Dagster ODP configuration:
+Create the necessary directories for dagster-odp configuration:
 
 ```bash
 mkdir -p odp_config/workflows
@@ -41,7 +41,7 @@ assets:
     task_type: shell_command
     description: "A simple asset that echoes a greeting"
     params:
-      command: echo "Hello, Dagster ODP!"
+      command: echo "Hello, dagster-odp!"
 ```
 
 This defines an asset that runs a shell command to echo our greeting.
@@ -76,12 +76,12 @@ In the Dagster UI:
 2. Find the `hello_world` asset
 3. Click the "Materialize" button
 
-This will run the shell command and echo "Hello, Dagster ODP!" in the logs.
+This will run the shell command and echo "Hello, dagster-odp!" in the logs.
 
 ## What's Next?
 
-Congratulations! You've set up your first Dagster ODP project. Here are some next steps to deepen your understanding:
+Congratulations! You've set up your first dagster-odp project. Here are some next steps to deepen your understanding:
 
 - [Tutorials](../tutorials/tutorials.md): Follow our step-by-step tutorials to build more complex workflows.
-- [Concepts](../concepts/concepts.md): Explore the key concepts behind Dagster ODP.
+- [Concepts](../concepts/concepts.md): Explore the key concepts behind dagster-odp.
 - [Reference](../reference/reference.md): Comprehensive details on all features and configurations.
