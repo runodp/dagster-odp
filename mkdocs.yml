@@ -1,5 +1,5 @@
-site_name: Dagster ODP
-site_url: https://mydomain.org/docs
+site_name: dagster-odp
+site_url: https://dagster-odp.github.io/docs
 theme:
   name: material
   features:

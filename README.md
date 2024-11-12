@@ -1,6 +1,6 @@
-# Dagster ODP (Open Data Platform)
+# dagster-odp (open data platform)
 
-Dagster ODP simplifies data pipeline development by enabling teams to build Dagster pipelines through configuration rather than code. It reduces the learning curve for Dagster while promoting standardization and faster development of data workflows.
+dagster-odp simplifies data pipeline development by enabling teams to build Dagster pipelines through configuration rather than code. It reduces the learning curve for Dagster while promoting standardization and faster development of data workflows.
 
 ## Key Features
 
@@ -76,7 +76,7 @@ defs = build_definitions("odp_config")
 
 Check out our [Quickstart Guide](https://dagster-odp.github.io/docs/getting-started/quickstart/) for a complete walkthrough.
 
-## Who Should Use Dagster ODP?
+## Who Should Use dagster-odp?
 
 - **Data Teams** seeking to standardize pipeline creation
 - **Data Analysts/Scientists** who want to create pipelines without extensive coding

@@ -1,6 +1,6 @@
 # Resources
 
-Resources in Dagster ODP provide a configuration-driven way to share code across tasks and sensors. While Dagster has its own resources system, ODP enhances it with simplified configuration management.
+Resources in dagster-odp provide a configuration-driven way to share code across tasks and sensors. While Dagster has its own resources system, ODP enhances it with simplified configuration management.
 
 ## Understanding Resources 
 
@@ -224,4 +224,4 @@ class CustomAPITask(BaseTask):
 - Keep resources focused on a single domain or service
 - Keep resource configurations in version control
 
-Resources are a fundamental part of Dagster ODP's configuration-driven approach. By properly configuring and using resources, you can create maintainable and secure data pipelines that effectively interact with external systems.
+Resources are a fundamental part of dagster-odp's configuration-driven approach. By properly configuring and using resources, you can create maintainable and secure data pipelines that effectively interact with external systems.

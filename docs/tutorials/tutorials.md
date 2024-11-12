@@ -1,6 +1,6 @@
 # Tutorials Overview
 
-Welcome to the Dagster ODP tutorials section! Here you'll find hands-on guides that will help you learn how to build data pipelines using Dagster ODP. The tutorials are designed to progressively introduce ODP concepts while building real-world data applications.
+Welcome to the dagster-odp tutorials section! Here you'll find hands-on guides that will help you learn how to build data pipelines using dagster-odp. The tutorials are designed to progressively introduce ODP concepts while building real-world data applications.
 
 ## Prerequisites
 
@@ -48,7 +48,7 @@ A comprehensive tutorial split into three parts that demonstrates how to build a
 
 **[Part 1: Initial Setup and Data Load](chess_part_1.md)**
 
-- Setting up a Dagster ODP project
+- Setting up a dagster-odp project
 - Integrating with DLT for API data ingestion
 - Understanding ODP's enhanced DLT functionality
 - Managing configuration across multiple files

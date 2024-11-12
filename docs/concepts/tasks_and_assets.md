@@ -1,6 +1,6 @@
 # Tasks and Assets
 
-Tasks and assets are the foundational building blocks in Dagster ODP. While Dagster provides software-defined assets through Python code, ODP introduces tasks as reusable components that create assets through configuration. This enables a declarative approach to building data pipelines.
+Tasks and assets are the foundational building blocks in dagster-odp. While Dagster provides software-defined assets through Python code, ODP introduces tasks as reusable components that create assets through configuration. This enables a declarative approach to building data pipelines.
 
 ## Understanding Tasks
 

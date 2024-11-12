@@ -1,12 +1,12 @@
 # Weather Analysis Tutorial (Introductory)
 
-In this tutorial, we'll build a data pipeline using Dagster ODP to analyze weather data across different countries for January 2024. 
+In this tutorial, we'll build a data pipeline using dagster-odp to analyze weather data across different countries for January 2024. 
 
 !!!tip "New to Dagster?"
     This tutorial assumes familiarity with Dagster concepts. If you're new to Dagster, we recommend checking out the [Dagster Quickstart](https://docs.dagster.io/getting-started/quickstart) and [Dagster Tutorial](https://docs.dagster.io/tutorial) first to get acquainted with the basics.
 
 !!!info "Experienced Dagster Users"
-    While this entire pipeline could be condensed into a single asset for efficiency, we've broken it down into multiple steps to better illustrate Dagster ODP concepts. Feel free to optimize the pipeline structure once you're comfortable with the workflow.
+    While this entire pipeline could be condensed into a single asset for efficiency, we've broken it down into multiple steps to better illustrate dagster-odp concepts. Feel free to optimize the pipeline structure once you're comfortable with the workflow.
 
 Before we dive into the details, let's take a look at the pipeline we're going to build:
 
@@ -25,11 +25,11 @@ This diagram shows the flow of data through our pipeline:
 3. Next, we join and aggregate the data using SQL queries within DuckDB.
 4. Finally, we export the aggregated results to a CSV file.
 
-By the end of this tutorial, you'll understand how to construct a Dagster ODP pipeline and be familiar with its key concepts.
+By the end of this tutorial, you'll understand how to construct a dagster-odp pipeline and be familiar with its key concepts.
 
 ## Prerequisites
 
-- Dagster ODP installed (see [Quickstart Guide](../getting-started/quickstart.md))
+- dagster-odp installed (see [Quickstart Guide](../getting-started/quickstart.md))
 - Basic familiarity with Dagster concepts
 
 ## Step 1: Set Up the Project
@@ -40,7 +40,7 @@ Let's create a new Dagster project using the scaffold command:
 dagster project scaffold --name weather_analysis
 cd weather_analysis
 ```
-This command creates a basic Dagster project structure. We'll modify it to use Dagster ODP.
+This command creates a basic Dagster project structure. We'll modify it to use dagster-odp.
 
 Now, let's create the necessary directories for our project:
 
@@ -48,9 +48,9 @@ Now, let's create the necessary directories for our project:
 mkdir -p odp_config/workflows
 mkdir data
 ```
-The `odp_config` directory will contain our Dagster ODP configuration, the `workflows` subdirectory will hold our pipeline definitions, and the `data` directory will store our input and output files.
+The `odp_config` directory will contain our dagster-odp configuration, the `workflows` subdirectory will hold our pipeline definitions, and the `data` directory will store our input and output files.
 
-## Step 2: Configure Dagster ODP Resources
+## Step 2: Configure dagster-odp Resources
 
 Create a file `odp_config/dagster_config.yaml`:
 
@@ -61,18 +61,18 @@ resources:
       database_path: data/weather_analysis.db
 ```
 
-This configuration defines the resources that Dagster ODP will create for our pipeline. In Dagster ODP, we define resources in the `dagster_config` file. This is different from standard Dagster, where resources are typically defined in Python code. This approach allows for easier configuration management and separates resource definitions from business logic.
+This configuration defines the resources that dagster-odp will create for our pipeline. In dagster-odp, we define resources in the `dagster_config` file. This is different from standard Dagster, where resources are typically defined in Python code. This approach allows for easier configuration management and separates resource definitions from business logic.
 
 Here's what this resource configuration does:
 
 1. It specifies a `duckdb` resource, which is a pre-built ODP resource.
 2. The `database_path` parameter tells DuckDB where to store the persistent database file.
 
-Dagster ODP will convert this configuration into a Dagster resource that our assets can use.
+dagster-odp will convert this configuration into a Dagster resource that our assets can use.
 
 ## Step 3: Create a Custom Task
 
-One of the powerful features of Dagster ODP is the ability to create custom tasks. Let's create a custom task to download files from a URL.
+One of the powerful features of dagster-odp is the ability to create custom tasks. Let's create a custom task to download files from a URL.
 
 Create a new file `weather_analysis/tasks.py` with the following content:
 
@@ -99,7 +99,7 @@ class UrlFileDownload(BaseTask):
 ```
 This custom task does the following:
 
-1. It uses the `@odp_task` decorator to register the task with Dagster ODP.
+1. It uses the `@odp_task` decorator to register the task with dagster-odp.
 2. The task is a subclass of `BaseTask`, which is the base class for all ODP tasks.
 3. It defines two parameters: `source_url` and `destination_file_path`.
 4. The `run` method contains the logic to download the file and save it locally.
@@ -169,11 +169,11 @@ jobs:
   - job_id: weather_analysis
     asset_selection: [raw_weather_data*, raw_country_data]
 ```
-Note that we've placed this file in the workflows subdirectory within odp_config. This is the correct location for Dagster ODP to pick up workflow definitions.
+Note that we've placed this file in the workflows subdirectory within odp_config. This is the correct location for dagster-odp to pick up workflow definitions.
 
-Let's break down this configuration, looking at both the pipeline logic and the Dagster ODP concepts:
+Let's break down this configuration, looking at both the pipeline logic and the dagster-odp concepts:
 
-1. **Assets and Tasks**: In Dagster ODP, assets are defined using tasks. A task represents an action and produces Dagster assets. Each asset in this file corresponds to a Dagster asset, and the `task_type` field specifies which task to use. Note that we're using our custom `url_file_download` task for the first two assets.
+1. **Assets and Tasks**: In dagster-odp, assets are defined using tasks. A task represents an action and produces Dagster assets. Each asset in this file corresponds to a Dagster asset, and the `task_type` field specifies which task to use. Note that we're using our custom `url_file_download` task for the first two assets.
 
 2. **Pipeline Logic**:
 
@@ -228,7 +228,7 @@ from .tasks import UrlFileDownload  # Import our custom task
 defs = build_definitions("odp_config")
 ```
 
-This tells Dagster ODP to use our configuration files in the odp_config directory to build the dagster definitions. It also imports our custom task, ensuring it's available for use in our pipeline. Dagster ODP will convert our YAML configurations into the corresponding Dagster components (assets, resources, and jobs).
+This tells dagster-odp to use our configuration files in the odp_config directory to build the dagster definitions. It also imports our custom task, ensuring it's available for use in our pipeline. dagster-odp will convert our YAML configurations into the corresponding Dagster components (assets, resources, and jobs).
 
 ## Step 7: Run the Pipeline
 
@@ -252,12 +252,12 @@ Once the pipeline has finished running, you can find the aggregated CSV file (`a
 
 ## Conclusion
 
-Congratulations! You've built a real-world data pipeline using Dagster ODP. This tutorial demonstrated how to:
+Congratulations! You've built a real-world data pipeline using dagster-odp. This tutorial demonstrated how to:
 
 1. Define resources in the `dagster_config.yaml` file, separating infrastructure concerns from pipeline logic.
 2. Create a workflow using various ODP task types in the `weather_pipeline.yaml` file, showcasing the power of configuration-driven development.
 3. Understand how ODP tasks translate to Dagster assets, simplifying the creation of complex data flows.
-4. See how Dagster ODP converts YAML configurations into Dagster components, reducing the amount of boilerplate code you need to write.
+4. See how dagster-odp converts YAML configurations into Dagster components, reducing the amount of boilerplate code you need to write.
 
 ## Next Steps
 
