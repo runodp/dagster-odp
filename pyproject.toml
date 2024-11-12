@@ -49,8 +49,12 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
+    # testing
     "pytest>=8.3.3,<9.0.0",
     "freezegun>=1.5.1,<2.0.0",
+    "pytest-cov>=6.0.0",
+
+    # documentation
     "mkdocs-material>=9.5.44,<10.0.0",
     "mkdocs-glightbox>=0.4.0,<0.5.0",
     
@@ -61,9 +65,6 @@ dev = [
     "isort>=5.13.2",
     "mypy>=1.13.0",
     "pylint>=3.3.1",
-    
-    # Coverage reporting
-    "pytest-cov>=6.0.0",
 ]
 
 [tool.isort]
