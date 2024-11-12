@@ -14,17 +14,17 @@ authors = [
 ]
 dependencies = [
     # Core Dagster - Pin to specific minor version for stability
-    "dagster>=1.9.0,<1.10.0",
-    "dagster-webserver>=1.9.0,<1.10.0",
+    "dagster>=1.9.1,<1.10.0",
+    "dagster-webserver>=1.9.1,<1.10.0",
     
     # Dagster Integrations - Keep in sync with core
-    "dagster-gcp>=0.25.0,<0.26.0",
-    "dagster-dbt>=0.25.0,<0.26.0",
+    "dagster-gcp>=0.25.1,<0.26.0",
+    "dagster-dbt>=0.25.1,<0.26.0",
     
     # DBT Stack - Use compatible versions
-    "dbt-core>=1.8.6,<1.9.0",
-    "dbt-bigquery>=1.8.2,<1.9.0",
-    "dbt-duckdb>=1.8.3,<1.9.0",
+    "dbt-core>=1.8.8,<1.9.0",
+    "dbt-bigquery>=1.8.3,<1.9.0",
+    "dbt-duckdb>=1.8.4,<1.9.0",
     
     # Data Loading Tool
     "dlt[bigquery]>=0.5.4,<0.6.0",
@@ -34,13 +34,13 @@ dependencies = [
     
     # Cloud Storage
     "google-cloud-storage>=2.18.2,<3.0.0",
-    "fsspec>=2024.9.0",
-    "gcsfs>=2024.9.0",
+    "fsspec>=2024.10.0",
+    "gcsfs>=2024.10.0",
     
     # Data Quality
-    "soda-core>=3.3.19,<3.4.0",
-    "soda-core-bigquery>=3.3.19,<3.4.0", 
-    "soda-core-duckdb>=3.3.19,<3.4.0",
+    "soda-core>=3.3.22,<3.4.0",
+    "soda-core-bigquery>=3.3.22,<3.4.0", 
+    "soda-core-duckdb>=3.3.22,<3.4.0",
     
     # Utilities
     "chevron>=0.14.0,<0.15.0",
@@ -51,7 +51,7 @@ dependencies = [
 dev = [
     "pytest>=8.3.3,<9.0.0",
     "freezegun>=1.5.1,<2.0.0",
-    "mkdocs-material>=9.5.39,<10.0.0",
+    "mkdocs-material>=9.5.44,<10.0.0",
     "mkdocs-glightbox>=0.4.0,<0.5.0",
     
     # Code quality tools
