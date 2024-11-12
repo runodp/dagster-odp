@@ -1,6 +1,6 @@
 # Configuration
 
-Dagster ODP's configuration system is the heart of its "configuration over code" approach. This page explains how ODP's configuration files work together to create data pipelines without extensive coding.
+dagster-odp's configuration system is the heart of its "configuration over code" approach. This page explains how ODP's configuration files work together to create data pipelines without extensive coding.
 
 ## Configuration Structure
 

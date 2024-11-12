@@ -1,6 +1,6 @@
 # Dagster Config Reference
 
-The `dagster_config` file is the central configuration file for defining resources in your Dagster ODP project. It serves as the single source of truth for resource configurations that tasks and sensors can use. For a broader understanding of ODP's configuration system, see the [Configuration](../concepts/configuration.md) documentation.
+The `dagster_config` file is the central configuration file for defining resources in your dagster-odp project. It serves as the single source of truth for resource configurations that tasks and sensors can use. For a broader understanding of ODP's configuration system, see the [Configuration](../concepts/configuration.md) documentation.
 
 ## Overview
 

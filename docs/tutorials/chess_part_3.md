@@ -366,7 +366,7 @@ The final CSV file will contain rich analytics about each player's monthly perfo
 
 ## Conclusion
 
-In this tutorial series, we've built a complete data pipeline using Dagster ODP that:
+In this tutorial series, we've built a complete data pipeline using dagster-odp that:
 
 - Ingests data from an external API using DLT
 - Implements data quality checks with Soda

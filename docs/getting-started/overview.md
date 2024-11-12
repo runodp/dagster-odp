@@ -1,10 +1,10 @@
-# Overview of Dagster ODP
+# Overview of dagster-odp
 
-Dagster ODP (Open Data Platform) extends Dagster's capabilities by providing a configuration-driven approach to building data pipelines. It's designed to streamline pipeline development and management for teams already using or familiar with Dagster.
+dagster-odp (open data platform) extends Dagster's capabilities by providing a configuration-driven approach to building data pipelines. It's designed to streamline pipeline development and management for teams already using or familiar with Dagster.
 
-## What is Dagster ODP?
+## What is dagster-odp?
 
-Dagster ODP acts as an abstraction layer, translating user-defined configurations into Dagster primitives such as assets, resources, sensors, schedules, partitions, and asset checks. This approach offers several advantages:
+dagster-odp acts as an abstraction layer, translating user-defined configurations into Dagster primitives such as assets, resources, sensors, schedules, partitions, and asset checks. This approach offers several advantages:
 
 1. **Configuration-driven pipeline creation**: Data analysts and scientists can create pipelines using pre-defined or custom tasks through YAML configuration, reducing the need for direct Python coding.
 2. **Declarative pipeline definitions**: ODP separates pipeline logic from task implementation, facilitating easier maintenance and iteration of data workflows.
@@ -125,7 +125,7 @@ ODP supports various configuration variables and features:
 - Date formatting helpers for working with different date formats
 - Sensor context passing for event-driven pipelines
 
-## Why Use Dagster ODP?
+## Why Use dagster-odp?
 
 ### 1. Empower Non-Engineers
 By using a configuration-based approach, ODP allows data analysts and scientists to create and modify pipelines without deep engineering knowledge.
@@ -144,7 +144,7 @@ As your data needs grow, ODP allows you to easily extend functionality through c
 
 ## Next Steps
 
-Now that you're familiar with Dagster ODP's concepts and benefits, you're ready to start building your first pipeline. Check out our:
+Now that you're familiar with dagster-odp's concepts and benefits, you're ready to start building your first pipeline. Check out our:
 
 - [Quickstart Guide](./quickstart.md) to get started
 - [Tutorials](../tutorials/tutorials.md) for more advanced real-world use cases

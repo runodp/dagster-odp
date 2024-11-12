@@ -1,6 +1,6 @@
 # Reference Overview
 
-This section provides detailed technical reference documentation for Dagster ODP's configuration system. The reference covers all available configuration options and their usage.
+This section provides detailed technical reference documentation for dagster-odp's configuration system. The reference covers all available configuration options and their usage.
 
 ## Configuration Files
 

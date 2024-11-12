@@ -1,6 +1,6 @@
 # Integrations
 
-Dagster ODP provides enhanced, configuration-driven integrations with popular data tools that complement Dagster's capabilities. These integrations simplify complex pipeline development through standardized configuration while preserving the power and flexibility of the underlying tools.
+dagster-odp provides enhanced, configuration-driven integrations with popular data tools that complement Dagster's capabilities. These integrations simplify complex pipeline development through standardized configuration while preserving the power and flexibility of the underlying tools.
 
 ## Core Integrations
 

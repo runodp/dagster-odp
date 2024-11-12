@@ -1,6 +1,6 @@
 # Generating Definitions
 
-Dagster ODP simplifies the process of creating Dagster definitions from configuration files through its `build_definitions` function. This page explains how to generate and combine ODP definitions with your existing Dagster code.
+dagster-odp simplifies the process of creating Dagster definitions from configuration files through its `build_definitions` function. This page explains how to generate and combine ODP definitions with your existing Dagster code.
 
 ## Building ODP Definitions
 
