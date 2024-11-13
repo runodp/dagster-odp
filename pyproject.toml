@@ -8,9 +8,26 @@ version = "0.1.2"
 description = "A configuration-driven framework for building Dagster pipelines"
 readme = "README.md"
 requires-python = ">=3.9,<3.13"
-license = {file = "LICENSE"}
 authors = [
     {name = "Jonathan Bhaskar", email = "hello@jonathanb.me"},
+]
+classifiers = [
+    # Python versions
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+
+    # License
+    "License :: OSI Approved :: Apache Software License",
+
+    # Project status and type
+    "Development Status :: 4 - Beta",
+    "Framework :: Dagster",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Software Development :: Libraries :: Application Frameworks",
 ]
 dependencies = [
     # Core Dagster - Pin to specific minor version for stability

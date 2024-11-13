@@ -1,5 +1,13 @@
 # dagster-odp (open data platform)
 
+[![PyPI version](https://badge.fury.io/py/dagster-odp.svg)](https://badge.fury.io/py/dagster-odp)
+[![Python Versions](https://img.shields.io/pypi/pyversions/dagster-odp.svg)](https://pypi.org/project/dagster-odp/)
+[![License](https://img.shields.io/pypi/l/dagster-odp.svg)](https://github.com/runodp/dagster-odp/blob/main/LICENSE)
+[![Documentation Status](https://github.com/runodp/dagster-odp/actions/workflows/gh_pages.yml/badge.svg)](https://runodp.github.io/dagster-odp/)
+[![CI Status](https://github.com/runodp/dagster-odp/actions/workflows/ci.yml/badge.svg)](https://github.com/runodp/dagster-odp/actions/workflows/ci.yml)
+[![Coverage](https://img.shields.io/codecov/c/github/runodp/dagster-odp)](https://codecov.io/gh/runodp/dagster-odp)
+[![Code Style: Black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+
 dagster-odp simplifies data pipeline development by enabling teams to build Dagster pipelines through configuration rather than code. It reduces the learning curve for Dagster while promoting standardization and faster development of data workflows.
 
 ## Key Features
