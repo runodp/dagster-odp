@@ -13,7 +13,7 @@ Let's start by installing the necessary packages:
 
 ```bash
 # Install dagster-odp, preferably in a virtual environment
-pip install git+https://github.com/runodp/dagster-odp.git
+pip install dagster-odp
 ```
 
 ## 2. Create a Dagster Project
